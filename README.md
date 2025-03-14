@@ -6,6 +6,8 @@ scalable and robust lending solution.
 
 ## Key Features
 
+![alt text](stats.jpeg)
+
 - **Enhanced Capital Efficiency**: Continuous matching with atomic splitting ensures funds are utilized effectively, pairing large positions with smaller counterparts seamlessly.
 - **User Convenience**: Stale positions are refunded automatically (99.5%), with a 0.5% fee to deter spam—no manual claims required.
 - **Risk Management**: Loans require 1.5x collateral minimum, with liquidation at 1.2x, ensuring stability without oracles.
