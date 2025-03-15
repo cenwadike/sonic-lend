@@ -6,8 +6,8 @@ use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
 use crate::{
     errors::ErrorCode,
     events::{AskSubmitted, LoanIssued},
-    states::{Ask, LendAuction, Loan, LoanPool, ShardPool},
-    utils::{compute_shard_id, insert_sorted_ask, match_ask},
+    states::{Ask, Bid, LendAuction, Loan, LoanPool, ShardPool},
+    utils::{compute_shard_id, insert_sorted_ask, insert_sorted_bid, match_ask},
 };
 
 /// Submit a borrower ask with atomic matching
@@ -25,7 +25,7 @@ pub fn process_submit_ask(
     // Validate inputs
     require!(amount > 0, ErrorCode::InvalidAmount);
     require!(collateral > 0, ErrorCode::InvalidCollateral);
-    require!(shard_pool.asks.len() < 1000, ErrorCode::PoolFull);
+    require!(shard_pool.asks.len() < 10, ErrorCode::PoolFull);
     require!(
         lend_auction
             .supported_tokens
@@ -124,6 +124,15 @@ pub fn process_submit_ask(
                 .checked_add(loan.amount)
                 .ok_or(ErrorCode::Overflow)?;
             loans.push(loan);
+
+            // Reinsert remaining bid amount
+            if bid.amount > loan_amount {
+                let remaining_bid = Bid {
+                    amount: bid.amount - loan_amount,
+                    ..bid
+                };
+                insert_sorted_bid(shard_pool, remaining_bid);
+            }
         }
 
         // Require full match for atomicity
@@ -179,43 +188,39 @@ pub fn process_submit_ask(
 #[instruction(amount: u64, max_rate: u8, collateral: u64)]
 pub struct SubmitAsk<'info> {
     #[account(mut, seeds = [b"lend_auction"], bump)]
-    pub lend_auction: Account<'info, LendAuction>,
+    pub lend_auction: Box<Account<'info, LendAuction>>,
     #[account(
         init_if_needed,
         payer = asker,
-        space = 8 + 8 + 1000 * (32 + 8 + 1 + 8 + 32 + 8) + 1000 * (32 + 8 + 1 + 8 + 8 + 32),
+        space = 8 + 8 + 10 * (32 + 8 + 1 + 8 + 32 + 8) + 10 * (32 + 8 + 1 + 8 + 8 + 32),
         seeds = [b"shard_pool", &compute_shard_id(&token_mint.key(), max_rate, lend_auction.shard_count).to_le_bytes()[..]], // Compute in function
         bump
     )]
-    pub shard_pool: Account<'info, ShardPool>,
+    pub shard_pool: Box<Account<'info, ShardPool>>,
     #[account(
         init_if_needed,
         payer = asker,
-        space = 8 + 8 + 1000 * (32 + 32 + 8 + 1 + 8 + 1 + 8 + 32 + 32 + 8 + 8),
+        space = 8 + 8 + 10 * (32 + 32 + 8 + 1 + 8 + 1 + 8 + 32 + 32 + 8 + 8),
         seeds = [b"loan_pool", &compute_shard_id(&token_mint.key(), max_rate, lend_auction.shard_count).to_le_bytes()[..]], // Compute in function
         bump
     )]
-    pub loan_pool: Account<'info, LoanPool>,
+    pub loan_pool: Box<Account<'info, LoanPool>>,
     #[account(mut)]
     pub asker: Signer<'info>,
     #[account(mut, constraint = asker_collateral_account.owner == asker.key())]
-    pub asker_collateral_account: Account<'info, TokenAccount>,
+    pub asker_collateral_account: Box<Account<'info, TokenAccount>>,
     #[account(mut)]
-    pub borrower_token_account: Account<'info, TokenAccount>,
+    pub borrower_token_account: Box<Account<'info, TokenAccount>>,
     #[account(
         mut,
-        seeds = [b"vault", &compute_shard_id(&token_mint.key(), max_rate, lend_auction.shard_count).to_le_bytes()[..]], // Compute in function
-        bump,
         constraint = vault_token_account.owner == lend_auction.key()
     )]
-    pub vault_token_account: Account<'info, TokenAccount>,
+    pub vault_token_account: Box<Account<'info, TokenAccount>>,
     #[account(
         mut,
-        seeds = [b"vault_collateral", &compute_shard_id(&token_mint.key(), max_rate, lend_auction.shard_count).to_le_bytes()[..]], // Compute in function
-        bump,
         constraint = vault_collateral_account.owner == lend_auction.key()
     )]
-    pub vault_collateral_account: Account<'info, TokenAccount>,
+    pub vault_collateral_account: Box<Account<'info, TokenAccount>>,
     pub token_mint: Box<Account<'info, Mint>>,
     pub collateral_mint: Box<Account<'info, Mint>>,
     pub token_program: Program<'info, Token>,

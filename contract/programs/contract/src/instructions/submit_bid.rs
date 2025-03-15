@@ -24,7 +24,7 @@ pub fn process_submit_bid(
     // Validate inputs
     require!(amount > 0, ErrorCode::InvalidAmount);
     require!(duration_slots > 0, ErrorCode::InvalidDuration);
-    require!(shard_pool.bids.len() < 1000, ErrorCode::PoolFull);
+    require!(shard_pool.bids.len() < 10, ErrorCode::PoolFull);
     require!(
         lend_auction
             .supported_tokens
@@ -164,37 +164,35 @@ pub fn process_submit_bid(
 #[instruction(amount: u64, min_rate: u8, duration_slots: u64)]
 pub struct SubmitBid<'info> {
     #[account(mut, seeds = [b"lend_auction"], bump)]
-    pub lend_auction: Account<'info, LendAuction>,
+    pub lend_auction: Box<Account<'info, LendAuction>>,
     #[account(
         init_if_needed,
         payer = bidder,
-        space = 8 + 8 + 1000 * (32 + 8 + 1 + 8 + 32 + 8) + 1000 * (32 + 8 + 1 + 8 + 8 + 32),
+        space = 8 + 8 + 10 * (32 + 8 + 1 + 8 + 32 + 8) + 10 * (32 + 8 + 1 + 8 + 8 + 32),
         seeds = [b"shard_pool", &compute_shard_id(&token_mint.key(), min_rate, lend_auction.shard_count).to_le_bytes()[..]], // Compute in function
         bump
     )]
-    pub shard_pool: Account<'info, ShardPool>,
+    pub shard_pool: Box<Account<'info, ShardPool>>,
     #[account(
         init_if_needed,
         payer = bidder,
-        space = 8 + 8 + 1000 * (32 + 32 + 8 + 1 + 8 + 1 + 8 + 32 + 32 + 8 + 8),
+        space = 8 + 8 + 10 * (32 + 32 + 8 + 1 + 8 + 1 + 8 + 32 + 32 + 8 + 8),
         seeds = [b"loan_pool", &compute_shard_id(&token_mint.key(), min_rate, lend_auction.shard_count).to_le_bytes()[..]], // Compute in function
         bump
     )]
-    pub loan_pool: Account<'info, LoanPool>,
+    pub loan_pool: Box<Account<'info, LoanPool>>,
     #[account(mut)]
     pub bidder: Signer<'info>,
     #[account(mut, constraint = bidder_token_account.owner == bidder.key())]
-    pub bidder_token_account: Account<'info, TokenAccount>,
+    pub bidder_token_account: Box<Account<'info, TokenAccount>>,
     #[account(mut)]
-    pub borrower_token_account: Account<'info, TokenAccount>,
+    pub borrower_token_account: Box<Account<'info, TokenAccount>>,
     #[account(
         mut,
-        seeds = [b"vault", &compute_shard_id(&token_mint.key(), min_rate, lend_auction.shard_count).to_le_bytes()[..]], // Compute in function
-        bump,
         constraint = vault_token_account.owner == lend_auction.key()
     )]
-    pub vault_token_account: Account<'info, TokenAccount>,
-    pub token_mint: Account<'info, Mint>,
+    pub vault_token_account: Box<Account<'info, TokenAccount>>,
+    pub token_mint: Box<Account<'info, Mint>>,
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
 }

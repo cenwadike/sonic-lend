@@ -1,14 +1,15 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{transfer, Token, TokenAccount, Transfer};
+use anchor_spl::token::{transfer, Mint, Token, TokenAccount, Transfer};
 
 use crate::{
     errors::ErrorCode,
     events::LoanRepaid,
-    states::{LendAuction, LoanPool},
+    states::{LendAuction, LoanPool}, utils::compute_shard_id,
 };
 
 /// Repay a loan
-pub fn process_repay(ctx: Context<Repay>, loan_idx: u64) -> Result<()> {
+pub fn process_repay(ctx: Context<Repay>, loan_idx: u64, rate: u8) -> Result<()> {
+    let _ = rate;
     let loan_pool = &mut ctx.accounts.loan_pool;
     let lend_auction = &ctx.accounts.lend_auction;
 
@@ -101,11 +102,11 @@ pub fn process_repay(ctx: Context<Repay>, loan_idx: u64) -> Result<()> {
     Ok(())
 }
 #[derive(Accounts)]
-#[instruction(loan_idx: u64)]
+#[instruction(loan_idx: u64, rate: u8)]
 pub struct Repay<'info> {
     #[account(mut, seeds = [b"lend_auction"], bump)]
     pub lend_auction: Account<'info, LendAuction>,
-    #[account(mut, seeds = [b"loan_pool", loan_pool.shard_id.to_le_bytes().as_ref()], bump)]
+    #[account(mut, seeds = [b"loan_pool",  &compute_shard_id(&token_mint.key(), rate, lend_auction.shard_count).to_le_bytes()[..]], bump)]
     pub loan_pool: Account<'info, LoanPool>,
     #[account(mut)]
     pub borrower: Signer<'info>,
@@ -117,10 +118,9 @@ pub struct Repay<'info> {
     pub lender_token_account: Account<'info, TokenAccount>,
     #[account(
         mut,
-        seeds = [b"vault_collateral", loan_pool.shard_id.to_le_bytes().as_ref()],
-        bump,
         constraint = vault_collateral_account.owner == lend_auction.key()
     )]
     pub vault_collateral_account: Account<'info, TokenAccount>,
+    pub token_mint: Box<Account<'info, Mint>>,
     pub token_program: Program<'info, Token>,
 }

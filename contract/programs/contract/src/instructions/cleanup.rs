@@ -40,16 +40,23 @@ pub fn process_cleanup(ctx: Context<Cleanup>, shard_id: u64) -> Result<()> {
     for bid in refunded_bids {
         let refund_amount = bid
             .amount
-            .checked_mul(995)
+            .checked_mul(995) // Refund is 99.5% of the original amount
             .ok_or(ErrorCode::Overflow)?
             .checked_div(1000)
             .ok_or(ErrorCode::Overflow)?;
+
         let fee_amount = bid
             .amount
-            .checked_mul(5)
+            .checked_mul(5) // Fee is 0.5% of the original amount
             .ok_or(ErrorCode::Overflow)?
             .checked_div(1000)
             .ok_or(ErrorCode::Overflow)?;
+
+        require_eq!(
+            refund_amount + fee_amount,
+            bid.amount,
+            ErrorCode::InvalidAmount
+        );
 
         transfer(
             CpiContext::new_with_signer(
@@ -63,6 +70,7 @@ pub fn process_cleanup(ctx: Context<Cleanup>, shard_id: u64) -> Result<()> {
             ),
             refund_amount,
         )?;
+
         transfer(
             CpiContext::new_with_signer(
                 ctx.accounts.token_program.to_account_info(),
@@ -117,7 +125,7 @@ pub fn process_cleanup(ctx: Context<Cleanup>, shard_id: u64) -> Result<()> {
                 ctx.accounts.token_program.to_account_info(),
                 Transfer {
                     from: ctx.accounts.vault_collateral_account.to_account_info(),
-                    to: ctx.accounts.fee_vault.to_account_info(),
+                    to: ctx.accounts.fee_vault_collateral.to_account_info(),
                     authority: lend_auction.to_account_info(),
                 },
                 &[&[b"lend_auction", &[ctx.bumps.lend_auction]]],
@@ -152,25 +160,21 @@ pub struct Cleanup<'info> {
     pub asker_collateral_account: Account<'info, TokenAccount>,
     #[account(
         mut,
-        seeds = [b"vault", shard_id.to_le_bytes().as_ref()],
-        bump,
         constraint = vault_token_account.owner == lend_auction.key()
     )]
     pub vault_token_account: Account<'info, TokenAccount>,
     #[account(
         mut,
-        seeds = [b"vault_collateral", shard_id.to_le_bytes().as_ref()],
-        bump,
         constraint = vault_collateral_account.owner == lend_auction.key()
     )]
     pub vault_collateral_account: Account<'info, TokenAccount>,
     #[account(
         mut,
-        seeds = [b"fee_vault", shard_id.to_le_bytes().as_ref()],
-        bump,
         constraint = fee_vault.owner == lend_auction.key()
     )]
     pub fee_vault: Account<'info, TokenAccount>,
+    #[account(mut, constraint = fee_vault_collateral.owner == lend_auction.key())]
+    pub fee_vault_collateral: Account<'info, TokenAccount>,
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
 }

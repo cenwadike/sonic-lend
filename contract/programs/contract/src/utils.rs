@@ -19,82 +19,119 @@ pub fn compute_shard_id(token_mint: &Pubkey, rate: u8, shard_count: u64) -> u64 
     u64::from_le_bytes(shard_bytes) % shard_count
 }
 
-/// Match a bid against sorted asks atomically
+/// Match a bid against sorted asks atomically, with a 5% rate difference limit
 pub fn match_bid(bid: &Bid, asks: &mut Vec<Ask>) -> Result<Vec<(Ask, u8)>> {
     if asks.is_empty() {
+        msg!("No asks available");
         return Ok(Vec::new());
     }
 
     let mut matches = Vec::new();
     let mut remaining_amount = bid.amount;
 
-    while remaining_amount > 0 && !asks.is_empty() {
-        let idx = asks
-            .binary_search_by(|a| a.max_rate.cmp(&bid.min_rate))
-            .unwrap_or_else(|e| e);
-        if idx >= asks.len()
-            || asks[idx].max_rate < bid.min_rate
-            || asks[idx].token_mint != bid.token_mint
-        {
-            break;
-        }
-
-        let ask = asks.remove(idx);
-        let rate = cmp::min((bid.min_rate + ask.max_rate) / 2, ask.max_rate);
-        let match_amount = cmp::min(remaining_amount, ask.amount);
-        matches.push((
-            Ask {
-                amount: match_amount,
-                ..ask
-            },
-            rate,
-        ));
-        remaining_amount = remaining_amount
-            .checked_sub(match_amount)
-            .ok_or(ErrorCode::Overflow)?;
+    msg!("Bid: min_rate={}, amount={}", bid.min_rate, bid.amount);
+    for (i, ask) in asks.iter().enumerate() {
+        msg!(
+            "Ask[{}]: max_rate={}, amount={}",
+            i,
+            ask.max_rate,
+            ask.amount
+        );
     }
 
+    let mut i = 0;
+    while i < asks.len() && remaining_amount > 0 {
+        let ask = &asks[i];
+        if ask.max_rate >= bid.min_rate && ask.token_mint == bid.token_mint {
+            let rate_diff = if ask.max_rate > bid.min_rate {
+                ask.max_rate - bid.min_rate
+            } else {
+                bid.min_rate - ask.max_rate
+            };
+            msg!("Ask[{}] rate_diff: {}", i, rate_diff);
+
+            if rate_diff <= 5 {
+                let match_amount = cmp::min(remaining_amount, ask.amount);
+                let rate = cmp::min((bid.min_rate + ask.max_rate) / 2, ask.max_rate);
+                msg!("Matching: amount={}, rate={}", match_amount, rate);
+
+                let matched_ask = asks.remove(i);
+                matches.push((
+                    Ask {
+                        amount: match_amount,
+                        ..matched_ask
+                    },
+                    rate,
+                ));
+                remaining_amount = remaining_amount
+                    .checked_sub(match_amount)
+                    .ok_or(ErrorCode::Overflow)?;
+                continue;
+            }
+        }
+        i += 1;
+    }
+
+    msg!("Total matches: {}", matches.len());
     Ok(matches)
 }
 
-/// Match an ask against sorted bids atomically
+/// Match an ask against sorted bids atomically, with a 5% rate difference limit
 pub fn match_ask(ask: &Ask, bids: &mut Vec<Bid>) -> Result<Vec<(Bid, u8)>> {
     if bids.is_empty() {
+        msg!("No bids available");
         return Ok(Vec::new());
     }
 
     let mut matches = Vec::new();
     let mut remaining_amount = ask.amount;
 
-    while remaining_amount > 0 && !bids.is_empty() {
-        let idx = bids
-            .binary_search_by(|b| b.min_rate.cmp(&ask.max_rate))
-            .unwrap_or_else(|e| e);
-        if idx == 0
-            || bids[idx - 1].min_rate > ask.max_rate
-            || bids[idx - 1].token_mint != ask.token_mint
-        {
-            break;
-        }
-
-        let bid = bids.remove(idx - 1);
-        let rate = cmp::min((bid.min_rate + ask.max_rate) / 2, ask.max_rate);
-        let match_amount = cmp::min(remaining_amount, bid.amount);
-        matches.push((
-            Bid {
-                amount: match_amount,
-                ..bid
-            },
-            rate,
-        ));
-        remaining_amount = remaining_amount
-            .checked_sub(match_amount)
-            .ok_or(ErrorCode::Overflow)?;
+    msg!("Ask: max_rate={}, amount={}", ask.max_rate, ask.amount);
+    for (i, bid) in bids.iter().enumerate() {
+        msg!(
+            "Bid[{}]: min_rate={}, amount={}",
+            i,
+            bid.min_rate,
+            bid.amount
+        );
     }
 
+    let mut i = 0;
+    while i < bids.len() && remaining_amount > 0 {
+        let bid = &bids[i];
+        if bid.min_rate <= ask.max_rate && bid.token_mint == ask.token_mint {
+            let rate_diff = if bid.min_rate > ask.max_rate {
+                bid.min_rate - ask.max_rate
+            } else {
+                ask.max_rate - bid.min_rate
+            };
+            msg!("Bid[{}] rate_diff: {}", i, rate_diff);
+
+            if rate_diff <= 5 {
+                let match_amount = cmp::min(remaining_amount, bid.amount);
+                let rate = cmp::min((bid.min_rate + ask.max_rate) / 2, ask.max_rate);
+                msg!("Matching: amount={}, rate={}", match_amount, rate);
+
+                let matched_bid = bids.remove(i);
+                matches.push((
+                    Bid {
+                        amount: match_amount,
+                        ..matched_bid
+                    },
+                    rate,
+                ));
+                remaining_amount = remaining_amount
+                    .checked_sub(match_amount)
+                    .ok_or(ErrorCode::Overflow)?;
+                continue;
+            }
+        }
+        i += 1;
+    }
+
+    msg!("Total matches: {}", matches.len());
     Ok(matches)
 }
-
 /// Insert bid into sorted Vec (ascending by min_rate)
 pub fn insert_sorted_bid(shard_pool: &mut ShardPool, bid: Bid) {
     let idx = shard_pool

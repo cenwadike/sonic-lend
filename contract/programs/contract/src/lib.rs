@@ -44,8 +44,8 @@ pub mod contract {
         process_submit_ask(ctx, amount, max_rate, collateral)
     }
 
-    pub fn repay(ctx: Context<Repay>, loan_idx: u64) -> Result<()> {
-        process_repay(ctx, loan_idx)
+    pub fn repay(ctx: Context<Repay>, loan_idx: u64, rate: u8) -> Result<()> {
+        process_repay(ctx, loan_idx, rate)
     }
 
     pub fn liquidate(

@@ -32,7 +32,7 @@ pub struct Initialize<'info> {
     #[account(
         init,
         payer = admin,
-        space = 8 + 32 + 8 + 8 + 32 * supported_tokens.len(),
+        space = 8 + 32 + 8 + 8 + 4 + 32 * supported_tokens.len(),
         seeds = [b"lend_auction"],
         bump
     )]

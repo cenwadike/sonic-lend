@@ -14,9 +14,7 @@ pub fn process_withdraw_fees(ctx: Context<WithdrawFees>, shard_id: u64, amount: 
     require!(shard_id < lend_auction.shard_count, ErrorCode::InvalidShard);
     require!(amount > 0, ErrorCode::InvalidAmount);
     require!(
-        lend_auction
-            .supported_tokens
-            .contains(&ctx.accounts.token_mint.key()),
+        lend_auction.supported_tokens.contains(&ctx.accounts.token_mint.key()),
         ErrorCode::UnsupportedToken
     );
     require_eq!(
@@ -61,8 +59,6 @@ pub struct WithdrawFees<'info> {
     pub admin: Signer<'info>,
     #[account(
         mut,
-        seeds = [b"fee_vault", shard_id.to_le_bytes().as_ref()],
-        bump,
         constraint = fee_vault.owner == lend_auction.key()
     )]
     pub fee_vault: Account<'info, TokenAccount>,
