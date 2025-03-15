@@ -1,0 +1,413 @@
+{
+  "version": "0.1.0",
+  "name": "contract",
+  "instructions": [
+    {
+      "name": "submitBid",
+      "accounts": [
+        {
+          "name": "lendAuction",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "shardPool",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "loanPool",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "bidder",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "bidderTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "borrowerTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "vaultTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "minRate",
+          "type": "u8"
+        },
+        {
+          "name": "durationSlots",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "submitAsk",
+      "accounts": [
+        {
+          "name": "lendAuction",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "shardPool",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "loanPool",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "asker",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "askerCollateralAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "borrowerTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "vaultTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "vaultCollateralAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "collateralMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "maxRate",
+          "type": "u8"
+        },
+        {
+          "name": "collateral",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "repay",
+      "accounts": [
+        {
+          "name": "lendAuction",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "loanPool",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "borrower",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "borrowerTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "borrowerCollateralAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "lenderTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "vaultCollateralAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "loanIdx",
+          "type": "u64"
+        },
+        {
+          "name": "rate",
+          "type": "u8"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "LendAuction",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "shardCount",
+            "type": "u64"
+          },
+          {
+            "name": "totalLoans",
+            "type": "u64"
+          },
+          {
+            "name": "supportedTokens",
+            "type": {
+              "vec": "pubkey"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "ShardPool",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "shardId",
+            "type": "u64"
+          },
+          {
+            "name": "bids",
+            "type": {
+              "vec": {
+                "defined": "Bid"
+              }
+            }
+          },
+          {
+            "name": "asks",
+            "type": {
+              "vec": {
+                "defined": "Ask"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "LoanPool",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "shardId",
+            "type": "u64"
+          },
+          {
+            "name": "loans",
+            "type": {
+              "vec": {
+                "defined": "Loan"
+              }
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "types": [
+    {
+      "name": "Bid",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "lender",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "minRate",
+            "type": "u8"
+          },
+          {
+            "name": "slot",
+            "type": "u64"
+          },
+          {
+            "name": "tokenMint",
+            "type": "pubkey"
+          },
+          {
+            "name": "durationSlots",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Ask",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "borrower",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "maxRate",
+            "type": "u8"
+          },
+          {
+            "name": "collateral",
+            "type": "u64"
+          },
+          {
+            "name": "slot",
+            "type": "u64"
+          },
+          {
+            "name": "tokenMint",
+            "type": "pubkey"
+          },
+          {
+            "name": "collateralMint",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Loan",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "lender",
+            "type": "pubkey"
+          },
+          {
+            "name": "borrower",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "rate",
+            "type": "u8"
+          },
+          {
+            "name": "collateral",
+            "type": "u64"
+          },
+          {
+            "name": "repaid",
+            "type": "bool"
+          },
+          {
+            "name": "shardId",
+            "type": "u64"
+          },
+          {
+            "name": "tokenMint",
+            "type": "pubkey"
+          },
+          {
+            "name": "collateralMint",
+            "type": "pubkey"
+          },
+          {
+            "name": "startSlot",
+            "type": "u64"
+          },
+          {
+            "name": "durationSlots",
+            "type": "u64"
+          }
+        ]
+      }
+    }
+  ]
+}
+
