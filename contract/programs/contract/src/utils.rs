@@ -1,16 +1,15 @@
 use std::cmp;
 
 use anchor_lang::prelude::*;
+use anchor_lang::solana_program::hash::hash;
 
 use crate::errors::ErrorCode;
 use crate::states::{Ask, Bid, ShardPool};
 
 /// Compute shard ID based on token_mint and rate
 pub fn compute_shard_id(token_mint: &Pubkey, rate: u8, shard_count: u64) -> u64 {
-    let mut hasher = anchor_lang::solana_program::hash::Hasher::default();
-    hasher.hash(&token_mint.to_bytes());
-    hasher.hash(&[rate]);
-    let hash = hasher.result();
+    let bytes = [token_mint.to_bytes().as_slice(), &[rate]].concat();
+    let hash = hash(&bytes);
     let bytes = hash.to_bytes();
     // Construct a [u8; 8] array explicitly from the first 8 bytes
     let shard_bytes = [
@@ -22,22 +21,11 @@ pub fn compute_shard_id(token_mint: &Pubkey, rate: u8, shard_count: u64) -> u64 
 /// Match a bid against sorted asks atomically, with a 5% rate difference limit
 pub fn match_bid(bid: &Bid, asks: &mut Vec<Ask>) -> Result<Vec<(Ask, u8)>> {
     if asks.is_empty() {
-        msg!("No asks available");
         return Ok(Vec::new());
     }
 
     let mut matches = Vec::new();
     let mut remaining_amount = bid.amount;
-
-    msg!("Bid: min_rate={}, amount={}", bid.min_rate, bid.amount);
-    for (i, ask) in asks.iter().enumerate() {
-        msg!(
-            "Ask[{}]: max_rate={}, amount={}",
-            i,
-            ask.max_rate,
-            ask.amount
-        );
-    }
 
     let mut i = 0;
     while i < asks.len() && remaining_amount > 0 {
@@ -48,12 +36,10 @@ pub fn match_bid(bid: &Bid, asks: &mut Vec<Ask>) -> Result<Vec<(Ask, u8)>> {
             } else {
                 bid.min_rate - ask.max_rate
             };
-            msg!("Ask[{}] rate_diff: {}", i, rate_diff);
 
             if rate_diff <= 5 {
                 let match_amount = cmp::min(remaining_amount, ask.amount);
                 let rate = cmp::min((bid.min_rate + ask.max_rate) / 2, ask.max_rate);
-                msg!("Matching: amount={}, rate={}", match_amount, rate);
 
                 let matched_ask = asks.remove(i);
                 matches.push((
@@ -72,29 +58,17 @@ pub fn match_bid(bid: &Bid, asks: &mut Vec<Ask>) -> Result<Vec<(Ask, u8)>> {
         i += 1;
     }
 
-    msg!("Total matches: {}", matches.len());
     Ok(matches)
 }
 
 /// Match an ask against sorted bids atomically, with a 5% rate difference limit
 pub fn match_ask(ask: &Ask, bids: &mut Vec<Bid>) -> Result<Vec<(Bid, u8)>> {
     if bids.is_empty() {
-        msg!("No bids available");
         return Ok(Vec::new());
     }
 
     let mut matches = Vec::new();
     let mut remaining_amount = ask.amount;
-
-    msg!("Ask: max_rate={}, amount={}", ask.max_rate, ask.amount);
-    for (i, bid) in bids.iter().enumerate() {
-        msg!(
-            "Bid[{}]: min_rate={}, amount={}",
-            i,
-            bid.min_rate,
-            bid.amount
-        );
-    }
 
     let mut i = 0;
     while i < bids.len() && remaining_amount > 0 {
@@ -105,12 +79,10 @@ pub fn match_ask(ask: &Ask, bids: &mut Vec<Bid>) -> Result<Vec<(Bid, u8)>> {
             } else {
                 ask.max_rate - bid.min_rate
             };
-            msg!("Bid[{}] rate_diff: {}", i, rate_diff);
 
             if rate_diff <= 5 {
                 let match_amount = cmp::min(remaining_amount, bid.amount);
                 let rate = cmp::min((bid.min_rate + ask.max_rate) / 2, ask.max_rate);
-                msg!("Matching: amount={}, rate={}", match_amount, rate);
 
                 let matched_bid = bids.remove(i);
                 matches.push((
@@ -129,7 +101,6 @@ pub fn match_ask(ask: &Ask, bids: &mut Vec<Bid>) -> Result<Vec<(Bid, u8)>> {
         i += 1;
     }
 
-    msg!("Total matches: {}", matches.len());
     Ok(matches)
 }
 /// Insert bid into sorted Vec (ascending by min_rate)

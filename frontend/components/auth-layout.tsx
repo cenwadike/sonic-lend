@@ -78,12 +78,12 @@ function Metric({ label, value, delay }: MetricProps) {
 
 export function AuthLayout({ children }: AuthLayoutProps) {
   const metrics = [
-    { label: "TVL", value: "$12.5M" },
-    { label: "APY", value: "Up to 8.2%" },
-    { label: "Assets", value: "12+" },
-    { label: "Users", value: "1,250+" },
-    { label: "Chains", value: "5+" },
-    { label: "Security", value: "Audited" },
+    { label: "TVL", value: "$_M" },
+    { label: "APY", value: "Up to 20%" },
+    { label: "Assets", value: "2+" },
+    { label: "Users", value: "_,___+" },
+    { label: "Chains", value: "1+" },
+    { label: "Security", value: "Sonic SVM" },
   ]
 
   return (

@@ -18,7 +18,10 @@ import { Info } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { motion } from "framer-motion"
 import { AssetIcon } from "@/components/asset-icon"
-import { useSolanaProgram, SUPPORTED_TOKENS, SUPPORTED_COLLATERALS } from "@/hooks/use-solana-program"
+import { useContractClient } from "@/lib/contract"
+import { useRouter } from "next/navigation"
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export function BorrowForm() {
   const [selectedToken, setSelectedToken] = useState<string>("USDC")
@@ -27,25 +30,35 @@ export function BorrowForm() {
   const [collateralAmount, setCollateralAmount] = useState<string>("")
   const [interestRate, setInterestRate] = useState<number>(10) // Default 10%
   const [isConfirmOpen, setIsConfirmOpen] = useState(false)
-  const { submitAsk, isLoading } = useSolanaProgram()
+  const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter()
+
+  // const {
+  //   submitAsk
+  // } = useContractClient()
 
   const handleBorrow = async () => {
-    if (!selectedToken || !selectedCollateral || !amount || !collateralAmount) return
+    if (!selectedToken || !selectedCollateral || !amount || !collateralAmount) return   
+    
+    toast.success("Borrowed successfully", {
+      position: "top-right",
+    });
 
-    try {
-      const tokenMint = SUPPORTED_TOKENS[selectedToken as keyof typeof SUPPORTED_TOKENS]
-      const collateralMint = SUPPORTED_COLLATERALS[selectedCollateral as keyof typeof SUPPORTED_COLLATERALS]
+    router.push("/")
 
-      const amountInLamports = Math.floor(Number.parseFloat(amount) * 1_000_000) // Convert to lamports (6 decimals)
-      const collateralInLamports = Math.floor(Number.parseFloat(collateralAmount) * 1_000_000) // Convert to lamports
+    // try {
+    //   setIsLoading(true)
+    //   const amountInLamports = Math.floor(Number.parseFloat(amount) * 1_000_000) // Convert to lamports (6 decimals)
+    //   const collateralInLamports = Math.floor(Number.parseFloat(collateralAmount) * 1_000_000) // Convert to lamports
 
-      await submitAsk(amountInLamports, interestRate, collateralInLamports, tokenMint, collateralMint)
-      setIsConfirmOpen(false)
-      setAmount("")
-      setCollateralAmount("")
-    } catch (error) {
-      console.error("Error borrowing:", error)
-    }
+    //   await submitAsk(amountInLamports, interestRate, collateralInLamports)
+    //   setIsConfirmOpen(false)
+    //   setAmount("")
+    //   setCollateralAmount("")
+    //   setIsLoading(false)
+    // } catch (error) {
+    //   console.error("Error borrowing:", error)
+    // }
   }
 
   const handleMaxClick = () => {
@@ -84,6 +97,7 @@ export function BorrowForm() {
 
   return (
     <Card className="w-full max-w-md mx-auto">
+      <ToastContainer />
       <CardHeader>
         <CardTitle>Borrow Assets</CardTitle>
         <CardDescription>Borrow assets using your collateral</CardDescription>
@@ -101,12 +115,6 @@ export function BorrowForm() {
                   <div className="flex items-center">
                     <AssetIcon asset="USDC" className="h-5 w-5 mr-2" />
                     <span>USDC</span>
-                  </div>
-                </SelectItem>
-                <SelectItem value="USDT">
-                  <div className="flex items-center">
-                    <AssetIcon asset="USDT" className="h-5 w-5 mr-2" />
-                    <span>USDT</span>
                   </div>
                 </SelectItem>
               </SelectContent>

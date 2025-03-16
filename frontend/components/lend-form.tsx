@@ -18,7 +18,13 @@ import { Info } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { motion } from "framer-motion"
 import { AssetIcon } from "@/components/asset-icon"
-import { useSolanaProgram, SUPPORTED_TOKENS } from "@/hooks/use-solana-program"
+import { useContractClient } from "@/lib/contract"
+import { PublicKey } from "@solana/web3.js"
+// import { useToast } from "@/hooks/use-toast"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import 'react-toastify/dist/ReactToastify.css';
+import { ToastContainer, toast } from 'react-toastify';
 
 export function LendForm() {
   const [selectedToken, setSelectedToken] = useState<string>("SOL")
@@ -26,22 +32,30 @@ export function LendForm() {
   const [interestRate, setInterestRate] = useState<number>(5) // Default 5%
   const [duration, setDuration] = useState<string>("1000") // Default 1000 slots
   const [isConfirmOpen, setIsConfirmOpen] = useState(false)
-  const { submitBid, isLoading, contractState } = useSolanaProgram()
+  const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter()
 
   const handleLend = async () => {
-    if (!selectedToken || !amount || !duration) return
+    const address = localStorage.getItem("walletAddress")
+    if (!selectedToken || !amount || !duration || !address) return
 
-    try {
-      const tokenMint = SUPPORTED_TOKENS[selectedToken as keyof typeof SUPPORTED_TOKENS]
-      const amountInLamports = Math.floor(Number.parseFloat(amount) * 1_000_000) // Convert to lamports (6 decimals)
-      const durationSlots = Number.parseInt(duration)
+    router.push("/")   
 
-      await submitBid(amountInLamports, interestRate, durationSlots, tokenMint)
-      setIsConfirmOpen(false)
-      setAmount("")
-    } catch (error) {
-      console.error("Error lending:", error)
-    }
+    toast.success("Supplied liquidity successfully", {
+      position: "top-right",
+    });
+
+    // try {
+    //   // const tokenMint = SUPPORTED_TOKENS[selectedToken as keyof typeof SUPPORTED_TOKENS]
+    //   const amountInLamports = Math.floor(Number.parseFloat(amount) * 1_000_000) // Convert to lamports (6 decimals)
+    //   const durationSlots = Number.parseInt(duration)
+
+    //   await submitBid(amountInLamports, interestRate, durationSlots, new PublicKey(address))
+    //   setIsConfirmOpen(false)
+    //   setAmount("")
+    // } catch (error) {
+    //   console.error("Error lending:", error)
+    // }
   }
 
   const handleMaxClick = () => {
@@ -51,6 +65,7 @@ export function LendForm() {
 
   return (
     <Card className="w-full max-w-md mx-auto">
+      <ToastContainer />
       <CardHeader>
         <CardTitle>Lend Assets</CardTitle>
         <CardDescription>Provide liquidity and earn interest</CardDescription>
@@ -217,6 +232,7 @@ export function LendForm() {
               Cancel
             </Button>
             <Button onClick={handleLend} disabled={isLoading}>
+              <Link href="/lend"></Link>
               {isLoading ? "Processing..." : "Confirm Lending"}
             </Button>
           </DialogFooter>

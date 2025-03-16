@@ -1,22 +1,33 @@
+"use client"
+
 import * as anchor from "@coral-xyz/anchor"
-import { Program, BN, type Idl } from "@coral-xyz/anchor"
-import { PublicKey, type Connection } from "@solana/web3.js"
-import { getAssociatedTokenAddress } from "@solana/spl-token"
+import { Program, BN } from "@coral-xyz/anchor"
+import { Connection, PublicKey, Transaction, VersionedTransaction } from "@solana/web3.js"
+import { getAssociatedTokenAddress, TOKEN_PROGRAM_ID } from "@solana/spl-token"
 import { sha256 } from "js-sha256"
 import { toast } from "@/hooks/use-toast"
+import { useWallet } from "@solana/wallet-adapter-react"
 
-// Program ID - replace with the actual deployed program ID
 const PROGRAM_ID = new PublicKey(
   process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || "EDvhvdnYVX2JsuAXvJXvBN3jd79ceNYMMnw11JSvzCPo",
 )
+
+const RPC_ENDPOINT =
+  process.env.NEXT_PUBLIC_RPC_ENDPOINT || "https://mainnet.helius-rpc.com/?api-key=d1e0db78-2d9b-411a-b40e-c879d96bf3e4"
 
 // Constants
 const LEND_AUCTION_SEED = "lend_auction"
 const SHARD_POOL_SEED = "shard_pool"
 const LOAN_POOL_SEED = "loan_pool"
 
+export const WSOL_MINT = new PublicKey("So11111111111111111111111111111111111111112")
+export const USDC_MINT = new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v")
+
 // Import IDL
-import idl from "./idl.json"
+import idl from "../../contract/target/idl/contract.json"
+
+// Type the IDL explicitly
+type ContractIdl = typeof idl & anchor.Idl;
 
 export interface ContractState {
   admin: PublicKey
@@ -76,54 +87,67 @@ export function computeShardId(tokenMint: PublicKey, rate: number, shardCount: n
   return hashNum.mod(new BN(shardCount))
 }
 
-export class ContractClient {
-  private program: Program
-  private connection: Connection
-  private wallet: anchor.Wallet
+export const useContractClient = () => {
+  const { publicKey, signTransaction, connected, sendTransaction } = useWallet()
+  const connection = new Connection(RPC_ENDPOINT, 'confirmed')
 
-  constructor(connection: Connection, wallet: anchor.Wallet) {
-    this.connection = connection
-    this.wallet = wallet
+  const getProvider = () => {
+    if (!connected || !publicKey || !signTransaction) {
+      throw new Error("Wallet not connected");
+    }
+  
+    return new anchor.AnchorProvider(
+      connection,
+      {
+        publicKey,
+        signTransaction,
+        signAllTransactions: async <T extends Transaction | VersionedTransaction>(
+          txs: T[]
+        ): Promise<T[]> => {
+          const signedTransactions = await Promise.all(
+            txs.map((tx) => signTransaction(tx))
+          );
+          return signedTransactions as T[];
+        },
+      },
+      { commitment: "confirmed" }
+    );
+  };
 
-    // Create provider
-    const provider = new anchor.AnchorProvider(connection, wallet, { commitment: "confirmed" })
-
-    // Create program
-    this.program = new Program(idl as Idl, PROGRAM_ID, provider)
+  const getProgram = () => {
+    const provider = getProvider()
+    return new Program(idl as ContractIdl, PROGRAM_ID, provider)
   }
 
-  // Get the lend_auction PDA
-  async getLendAuctionPDA(): Promise<[PublicKey, number]> {
-    return PublicKey.findProgramAddressSync([Buffer.from(LEND_AUCTION_SEED)], this.program.programId)
+  const getLendAuctionPDA = async (): Promise<[PublicKey, number]> => {
+    return PublicKey.findProgramAddressSync([Buffer.from(LEND_AUCTION_SEED)], PROGRAM_ID)
   }
 
-  // Get the shard_pool PDA
-  async getShardPoolPDA(shardId: BN): Promise<[PublicKey, number]> {
+  const getShardPoolPDA = async (shardId: BN): Promise<[PublicKey, number]> => {
     return PublicKey.findProgramAddressSync(
       [Buffer.from(SHARD_POOL_SEED), shardId.toArrayLike(Buffer, "le", 8)],
-      this.program.programId,
+      PROGRAM_ID
     )
   }
 
-  // Get the loan_pool PDA
-  async getLoanPoolPDA(shardId: BN): Promise<[PublicKey, number]> {
+  const getLoanPoolPDA = async (shardId: BN): Promise<[PublicKey, number]> => {
     return PublicKey.findProgramAddressSync(
       [Buffer.from(LOAN_POOL_SEED), shardId.toArrayLike(Buffer, "le", 8)],
-      this.program.programId,
+      PROGRAM_ID
     )
   }
 
-  // Get contract state
-  async getContractState(): Promise<ContractState | null> {
+  const getContractState = async (): Promise<ContractState | null> => {
+    if (!connected) return null
     try {
-      const [lendAuctionPDA] = await this.getLendAuctionPDA()
-      const lendAuction = await this.program.account.lendAuction.fetch(lendAuctionPDA)
-
+      const program = getProgram()
+      const [lendAuctionPDA] = await getLendAuctionPDA()
+      const lendAuction = await program.account.lendAuction.fetch(lendAuctionPDA) as any as ContractState
       return {
         admin: lendAuction.admin,
-        shardCount: lendAuction.shardCount.toNumber(),
-        totalLoans: lendAuction.totalLoans.toNumber(),
-        supportedTokens: lendAuction.supportedTokens,
+        shardCount: lendAuction.shardCount,
+        totalLoans: lendAuction.totalLoans,
+        supportedTokens: lendAuction.supportedTokens
       }
     } catch (error) {
       console.error("Error fetching contract state:", error)
@@ -131,12 +155,12 @@ export class ContractClient {
     }
   }
 
-  // Get shard pool
-  async getShardPool(shardId: BN): Promise<ShardPool | null> {
+  const getShardPool = async (shardId: BN): Promise<ShardPool | null> => {
+    if (!connected) return null
     try {
-      const [shardPoolPDA] = await this.getShardPoolPDA(shardId)
-      const shardPool = await this.program.account.shardPool.fetch(shardPoolPDA)
-
+      const program = getProgram()
+      const [shardPoolPDA] = await getShardPoolPDA(shardId)
+      const shardPool = await program.account.shardPool.fetch(shardPoolPDA) as any
       return {
         shardId: shardPool.shardId,
         bids: shardPool.bids || [],
@@ -148,12 +172,12 @@ export class ContractClient {
     }
   }
 
-  // Get loan pool
-  async getLoanPool(shardId: BN): Promise<LoanPool | null> {
+  const getLoanPool = async (shardId: BN): Promise<LoanPool | null> => {
+    if (!connected) return null
     try {
-      const [loanPoolPDA] = await this.getLoanPoolPDA(shardId)
-      const loanPool = await this.program.account.loanPool.fetch(loanPoolPDA)
-
+      const program = getProgram()
+      const [loanPoolPDA] = await getLoanPoolPDA(shardId)
+      const loanPool = await program.account.loanPool.fetch(loanPoolPDA) as any
       return {
         shardId: loanPool.shardId,
         loans: loanPool.loans || [],
@@ -164,55 +188,48 @@ export class ContractClient {
     }
   }
 
-  // Submit a bid
-  async submitBid(amount: number, minRate: number, durationSlots: number, tokenMint: PublicKey): Promise<string> {
+  const submitBid = async (
+    amount: number,
+    minRate: number,
+    durationSlots: number,
+    borrowerPublicKey: PublicKey
+  ): Promise<string> => {
+    if (!connected || !publicKey) throw new Error("Wallet not connected")
+
     try {
-      const contractState = await this.getContractState()
-      if (!contractState) {
-        throw new Error("Contract not initialized")
-      }
+      const program = getProgram()
+      const contractState = await getContractState()
+      if (!contractState) throw new Error("Contract not initialized")
 
-      // Compute shard ID
-      const shardId = computeShardId(tokenMint, minRate, contractState.shardCount)
+      const shardId = computeShardId(USDC_MINT, minRate, contractState.shardCount)
+      const [lendAuctionPDA] = await getLendAuctionPDA()
+      const [shardPoolPDA] = await getShardPoolPDA(shardId)
+      const [loanPoolPDA] = await getLoanPoolPDA(shardId)
 
-      // Get PDAs
-      const [lendAuctionPDA] = await this.getLendAuctionPDA()
-      const [shardPoolPDA] = await this.getShardPoolPDA(shardId)
-      const [loanPoolPDA] = await this.getLoanPoolPDA(shardId)
+      const bidderTokenAccount = await getAssociatedTokenAddress(USDC_MINT, publicKey)
+      const borrowerTokenAccount = await getAssociatedTokenAddress(USDC_MINT, borrowerPublicKey)
+      const vaultTokenAccount = await getAssociatedTokenAddress(USDC_MINT, lendAuctionPDA, true)
 
-      // Get token accounts
-      const bidderTokenAccount = await getAssociatedTokenAddress(tokenMint, this.wallet.publicKey)
-
-      // For simplicity, we'll use the bidder's token account as the borrower's token account
-      const borrowerTokenAccount = bidderTokenAccount
-
-      // Get vault token account
-      const vaultTokenAccount = await getAssociatedTokenAddress(
-        tokenMint,
-        lendAuctionPDA,
-        true, // Allow PDA as owner
-      )
-
-      // Submit bid
-      const tx = await this.program.methods
+      const transaction = await program.methods
         .submitBid(new BN(amount), minRate, new BN(durationSlots))
         .accounts({
           lendAuction: lendAuctionPDA,
           shardPool: shardPoolPDA,
           loanPool: loanPoolPDA,
-          bidder: this.wallet.publicKey,
+          bidder: publicKey,
           bidderTokenAccount,
           borrowerTokenAccount,
           vaultTokenAccount,
-          tokenMint,
-          tokenProgram: anchor.utils.token.TOKEN_PROGRAM_ID,
+          tokenMint: USDC_MINT,
+          tokenProgram: TOKEN_PROGRAM_ID,
           systemProgram: anchor.web3.SystemProgram.programId,
         })
-        .rpc()
+        .transaction()
 
-      return tx
-    } catch (error) {
-      console.error("Error submitting bid:", error)
+      const txSignature = await sendTransaction(transaction, connection)
+      await connection.confirmTransaction(txSignature, 'confirmed')
+      return txSignature
+    } catch (error: any) {
       toast({
         title: "Error submitting bid",
         description: error.message,
@@ -222,60 +239,50 @@ export class ContractClient {
     }
   }
 
-  // Submit an ask
-  async submitAsk(
+  const submitAsk = async (
     amount: number,
     maxRate: number,
-    collateral: number,
-    tokenMint: PublicKey,
-    collateralMint: PublicKey,
-  ): Promise<string> {
+    collateral: number
+  ): Promise<string> => {
+    if (!connected || !publicKey) throw new Error("Wallet not connected")
+
     try {
-      const contractState = await this.getContractState()
-      if (!contractState) {
-        throw new Error("Contract not initialized")
-      }
+      const program = getProgram()
+      const contractState = await getContractState()
+      if (!contractState) throw new Error("Contract not initialized")
 
-      // Compute shard ID
-      const shardId = computeShardId(tokenMint, maxRate, contractState.shardCount)
+      const shardId = computeShardId(USDC_MINT, maxRate, contractState.shardCount)
+      const [lendAuctionPDA] = await getLendAuctionPDA()
+      const [shardPoolPDA] = await getShardPoolPDA(shardId)
+      const [loanPoolPDA] = await getLoanPoolPDA(shardId)
 
-      // Get PDAs
-      const [lendAuctionPDA] = await this.getLendAuctionPDA()
-      const [shardPoolPDA] = await this.getShardPoolPDA(shardId)
-      const [loanPoolPDA] = await this.getLoanPoolPDA(shardId)
+      const askerCollateralAccount = await getAssociatedTokenAddress(WSOL_MINT, publicKey)
+      const borrowerTokenAccount = await getAssociatedTokenAddress(USDC_MINT, publicKey)
+      const vaultTokenAccount = await getAssociatedTokenAddress(USDC_MINT, lendAuctionPDA, true)
+      const vaultCollateralAccount = await getAssociatedTokenAddress(WSOL_MINT, lendAuctionPDA, true)
 
-      // Get token accounts
-      const askerCollateralAccount = await getAssociatedTokenAddress(collateralMint, this.wallet.publicKey)
-
-      const borrowerTokenAccount = await getAssociatedTokenAddress(tokenMint, this.wallet.publicKey)
-
-      // Get vault accounts
-      const vaultTokenAccount = await getAssociatedTokenAddress(tokenMint, lendAuctionPDA, true)
-
-      const vaultCollateralAccount = await getAssociatedTokenAddress(collateralMint, lendAuctionPDA, true)
-
-      // Submit ask
-      const tx = await this.program.methods
+      const transaction = await program.methods
         .submitAsk(new BN(amount), maxRate, new BN(collateral))
         .accounts({
           lendAuction: lendAuctionPDA,
           shardPool: shardPoolPDA,
           loanPool: loanPoolPDA,
-          asker: this.wallet.publicKey,
+          asker: publicKey,
           askerCollateralAccount,
           borrowerTokenAccount,
           vaultTokenAccount,
           vaultCollateralAccount,
-          tokenMint,
-          collateralMint,
-          tokenProgram: anchor.utils.token.TOKEN_PROGRAM_ID,
+          tokenMint: USDC_MINT,
+          collateralMint: WSOL_MINT,
+          tokenProgram: TOKEN_PROGRAM_ID,
           systemProgram: anchor.web3.SystemProgram.programId,
         })
-        .rpc()
+        .transaction()
 
-      return tx
-    } catch (error) {
-      console.error("Error submitting ask:", error)
+      const txSignature = await sendTransaction(transaction, connection)
+      await connection.confirmTransaction(txSignature, 'confirmed')
+      return txSignature
+    } catch (error: any) {
       toast({
         title: "Error submitting ask",
         description: error.message,
@@ -285,56 +292,47 @@ export class ContractClient {
     }
   }
 
-  // Repay a loan
-  async repayLoan(
+  const repayLoan = async (
     loanIdx: number,
     rate: number,
-    tokenMint: PublicKey,
-    collateralMint: PublicKey,
-    lenderPublicKey: PublicKey,
-  ): Promise<string> {
+    lenderPublicKey: PublicKey
+  ): Promise<string> => {
+    if (!connected || !publicKey) throw new Error("Wallet not connected")
+
     try {
-      const contractState = await this.getContractState()
-      if (!contractState) {
-        throw new Error("Contract not initialized")
-      }
+      const program = getProgram()
+      const contractState = await getContractState()
+      if (!contractState) throw new Error("Contract not initialized")
 
-      // Compute shard ID
-      const shardId = computeShardId(tokenMint, rate, contractState.shardCount)
+      const shardId = computeShardId(USDC_MINT, rate, contractState.shardCount)
+      const [lendAuctionPDA] = await getLendAuctionPDA()
+      const [loanPoolPDA] = await getLoanPoolPDA(shardId)
 
-      // Get PDAs
-      const [lendAuctionPDA] = await this.getLendAuctionPDA()
-      const [loanPoolPDA] = await this.getLoanPoolPDA(shardId)
+      const borrowerTokenAccount = await getAssociatedTokenAddress(USDC_MINT, publicKey)
+      const borrowerCollateralAccount = await getAssociatedTokenAddress(WSOL_MINT, publicKey)
+      const lenderTokenAccount = await getAssociatedTokenAddress(USDC_MINT, lenderPublicKey)
+      const vaultCollateralAccount = await getAssociatedTokenAddress(WSOL_MINT, lendAuctionPDA, true)
 
-      // Get token accounts
-      const borrowerTokenAccount = await getAssociatedTokenAddress(tokenMint, this.wallet.publicKey)
-
-      const borrowerCollateralAccount = await getAssociatedTokenAddress(collateralMint, this.wallet.publicKey)
-
-      const lenderTokenAccount = await getAssociatedTokenAddress(tokenMint, lenderPublicKey)
-
-      // Get vault collateral account
-      const vaultCollateralAccount = await getAssociatedTokenAddress(collateralMint, lendAuctionPDA, true)
-
-      // Repay loan
-      const tx = await this.program.methods
+      const transaction = await program.methods
         .repay(new BN(loanIdx), rate)
         .accounts({
           lendAuction: lendAuctionPDA,
           loanPool: loanPoolPDA,
-          borrower: this.wallet.publicKey,
+          borrower: publicKey,
           borrowerTokenAccount,
           borrowerCollateralAccount,
           lenderTokenAccount,
           vaultCollateralAccount,
-          tokenMint,
-          tokenProgram: anchor.utils.token.TOKEN_PROGRAM_ID,
+          tokenMint: USDC_MINT,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          systemProgram: anchor.web3.SystemProgram.programId,
         })
-        .rpc()
+        .transaction()
 
-      return tx
-    } catch (error) {
-      console.error("Error repaying loan:", error)
+      const txSignature = await sendTransaction(transaction, connection)
+      await connection.confirmTransaction(txSignature, 'confirmed')
+      return txSignature
+    } catch (error: any) {
       toast({
         title: "Error repaying loan",
         description: error.message,
@@ -344,31 +342,23 @@ export class ContractClient {
     }
   }
 
-  // Get all loans for a user (both as lender and borrower)
-  async getUserLoans(userPublicKey: PublicKey): Promise<Loan[]> {
+  const getUserLoans = async (userPublicKey: PublicKey): Promise<Loan[]> => {
+    if (!connected) return []
     try {
-      const contractState = await this.getContractState()
-      if (!contractState) {
-        return []
-      }
+      const contractState = await getContractState()
+      if (!contractState) return []
 
       const loans: Loan[] = []
-
-      // Iterate through all possible shards
       for (let i = 0; i < contractState.shardCount; i++) {
         const shardId = new BN(i)
-        const loanPool = await this.getLoanPool(shardId)
-
-        if (loanPool && loanPool.loans && loanPool.loans.length > 0) {
-          // Filter loans where user is either lender or borrower
+        const loanPool = await getLoanPool(shardId)
+        if (loanPool?.loans?.length) {
           const userLoans = loanPool.loans.filter(
-            (loan) => loan.lender.equals(userPublicKey) || loan.borrower.equals(userPublicKey),
+            (loan) => loan.lender.equals(userPublicKey) || loan.borrower.equals(userPublicKey)
           )
-
           loans.push(...userLoans)
         }
       }
-
       return loans
     } catch (error) {
       console.error("Error fetching user loans:", error)
@@ -376,29 +366,21 @@ export class ContractClient {
     }
   }
 
-  // Get all bids for a user
-  async getUserBids(userPublicKey: PublicKey): Promise<Bid[]> {
+  const getUserBids = async (userPublicKey: PublicKey): Promise<Bid[]> => {
+    if (!connected) return []
     try {
-      const contractState = await this.getContractState()
-      if (!contractState) {
-        return []
-      }
+      const contractState = await getContractState()
+      if (!contractState) return []
 
       const bids: Bid[] = []
-
-      // Iterate through all possible shards
       for (let i = 0; i < contractState.shardCount; i++) {
         const shardId = new BN(i)
-        const shardPool = await this.getShardPool(shardId)
-
-        if (shardPool && shardPool.bids && shardPool.bids.length > 0) {
-          // Filter bids where user is the lender
+        const shardPool = await getShardPool(shardId)
+        if (shardPool?.bids?.length) {
           const userBids = shardPool.bids.filter((bid) => bid.lender.equals(userPublicKey))
-
           bids.push(...userBids)
         }
       }
-
       return bids
     } catch (error) {
       console.error("Error fetching user bids:", error)
@@ -406,34 +388,37 @@ export class ContractClient {
     }
   }
 
-  // Get all asks for a user
-  async getUserAsks(userPublicKey: PublicKey): Promise<Ask[]> {
+  const getUserAsks = async (userPublicKey: PublicKey): Promise<Ask[]> => {
+    if (!connected) return []
     try {
-      const contractState = await this.getContractState()
-      if (!contractState) {
-        return []
-      }
+      const contractState = await getContractState()
+      if (!contractState) return []
 
       const asks: Ask[] = []
-
-      // Iterate through all possible shards
       for (let i = 0; i < contractState.shardCount; i++) {
         const shardId = new BN(i)
-        const shardPool = await this.getShardPool(shardId)
-
-        if (shardPool && shardPool.asks && shardPool.asks.length > 0) {
-          // Filter asks where user is the borrower
+        const shardPool = await getShardPool(shardId)
+        if (shardPool?.asks?.length) {
           const userAsks = shardPool.asks.filter((ask) => ask.borrower.equals(userPublicKey))
-
           asks.push(...userAsks)
         }
       }
-
       return asks
     } catch (error) {
       console.error("Error fetching user asks:", error)
       return []
     }
   }
-}
 
+  return {
+    getContractState,
+    getShardPool,
+    getLoanPool,
+    submitBid,
+    submitAsk,
+    repayLoan,
+    getUserLoans,
+    getUserBids,
+    getUserAsks,
+  }
+}

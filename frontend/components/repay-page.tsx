@@ -21,7 +21,7 @@ import { useToast } from "@/hooks/use-toast"
 import { motion, AnimatePresence } from "framer-motion"
 import { AssetIcon } from "@/components/asset-icon"
 import { FadeIn, SlideUp, StaggerChildren, StaggerItem } from "@/components/animations"
-import { getMarketData, repayLoan, getUserPositions } from "@/lib/solana"
+import { getMarketData, getUserPositions } from "@/lib/solana"
 
 export function RepayPage() {
   const [selectedPosition, setSelectedPosition] = useState<any | null>(null)

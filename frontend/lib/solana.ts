@@ -85,67 +85,6 @@ export async function disconnectWallet(walletType: "phantom" | "solflare"): Prom
   }
 }
 
-// Sonic Lend Protocol Interaction
-export async function depositCollateral(wallet: SolanaWallet, tokenMint: string, amount: number): Promise<string> {
-  try {
-    // This would be replaced with actual contract interaction
-    console.log(`Depositing ${amount} of token ${tokenMint} as collateral`)
-
-    // Simulate transaction
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-
-    return "transaction_hash_" + Math.random().toString(36).substring(2, 15)
-  } catch (error) {
-    console.error("Error depositing collateral:", error)
-    throw error
-  }
-}
-
-export async function borrowAsset(wallet: SolanaWallet, tokenMint: string, amount: number): Promise<string> {
-  try {
-    // This would be replaced with actual contract interaction
-    console.log(`Borrowing ${amount} of token ${tokenMint}`)
-
-    // Simulate transaction
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-
-    return "transaction_hash_" + Math.random().toString(36).substring(2, 15)
-  } catch (error) {
-    console.error("Error borrowing asset:", error)
-    throw error
-  }
-}
-
-export async function repayLoan(wallet: SolanaWallet, tokenMint: string, amount: number): Promise<string> {
-  try {
-    // This would be replaced with actual contract interaction
-    console.log(`Repaying ${amount} of token ${tokenMint}`)
-
-    // Simulate transaction
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-
-    return "transaction_hash_" + Math.random().toString(36).substring(2, 15)
-  } catch (error) {
-    console.error("Error repaying loan:", error)
-    throw error
-  }
-}
-
-export async function liquidatePosition(wallet: SolanaWallet, positionId: string, amount: number): Promise<string> {
-  try {
-    // This would be replaced with actual contract interaction
-    console.log(`Liquidating position ${positionId} with ${amount}`)
-
-    // Simulate transaction
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-
-    return "transaction_hash_" + Math.random().toString(36).substring(2, 15)
-  } catch (error) {
-    console.error("Error liquidating position:", error)
-    throw error
-  }
-}
-
 // Get user positions
 export async function getUserPositions(wallet: SolanaWallet): Promise<any[]> {
   try {

@@ -1,138 +1,520 @@
 {
-  "version": "0.1.0",
-  "name": "contract",
+  "address": "EDvhvdnYVX2JsuAXvJXvBN3jd79ceNYMMnw11JSvzCPo",
+  "metadata": {
+    "name": "contract",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Created with Anchor"
+  },
   "instructions": [
     {
-      "name": "submitBid",
+      "name": "cleanup",
+      "discriminator": [
+        36,
+        158,
+        31,
+        187,
+        253,
+        37,
+        68,
+        210
+      ],
       "accounts": [
         {
-          "name": "lendAuction",
-          "isMut": true,
-          "isSigner": false
+          "name": "lend_auction",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  101,
+                  110,
+                  100,
+                  95,
+                  97,
+                  117,
+                  99,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              }
+            ]
+          }
         },
         {
-          "name": "shardPool",
-          "isMut": true,
-          "isSigner": false
+          "name": "shard_pool",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  104,
+                  97,
+                  114,
+                  100,
+                  95,
+                  112,
+                  111,
+                  111,
+                  108
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "shard_id"
+              }
+            ]
+          }
         },
         {
-          "name": "loanPool",
-          "isMut": true,
-          "isSigner": false
+          "name": "bidder_token_account",
+          "writable": true
         },
         {
-          "name": "bidder",
-          "isMut": true,
-          "isSigner": true
+          "name": "asker_collateral_account",
+          "writable": true
         },
         {
-          "name": "bidderTokenAccount",
-          "isMut": true,
-          "isSigner": false
+          "name": "vault_token_account",
+          "writable": true
         },
         {
-          "name": "borrowerTokenAccount",
-          "isMut": true,
-          "isSigner": false
+          "name": "vault_collateral_account",
+          "writable": true
         },
         {
-          "name": "vaultTokenAccount",
-          "isMut": true,
-          "isSigner": false
+          "name": "fee_vault",
+          "writable": true
         },
         {
-          "name": "tokenMint",
-          "isMut": false,
-          "isSigner": false
+          "name": "fee_vault_collateral",
+          "writable": true
         },
         {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         },
         {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
         }
       ],
       "args": [
         {
-          "name": "amount",
-          "type": "u64"
-        },
-        {
-          "name": "minRate",
-          "type": "u8"
-        },
-        {
-          "name": "durationSlots",
+          "name": "shard_id",
           "type": "u64"
         }
       ]
     },
     {
-      "name": "submitAsk",
+      "name": "initialize",
+      "discriminator": [
+        175,
+        175,
+        109,
+        31,
+        13,
+        152,
+        155,
+        237
+      ],
       "accounts": [
         {
-          "name": "lendAuction",
-          "isMut": true,
-          "isSigner": false
+          "name": "lend_auction",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  101,
+                  110,
+                  100,
+                  95,
+                  97,
+                  117,
+                  99,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              }
+            ]
+          }
         },
         {
-          "name": "shardPool",
-          "isMut": true,
-          "isSigner": false
+          "name": "admin",
+          "writable": true,
+          "signer": true
         },
         {
-          "name": "loanPool",
-          "isMut": true,
-          "isSigner": false
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "shard_count",
+          "type": "u64"
+        },
+        {
+          "name": "supported_tokens",
+          "type": {
+            "vec": "pubkey"
+          }
+        }
+      ]
+    },
+    {
+      "name": "liquidate",
+      "discriminator": [
+        223,
+        179,
+        226,
+        125,
+        48,
+        46,
+        39,
+        74
+      ],
+      "accounts": [
+        {
+          "name": "lend_auction",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  101,
+                  110,
+                  100,
+                  95,
+                  97,
+                  117,
+                  99,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "loan_pool",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  111,
+                  97,
+                  110,
+                  95,
+                  112,
+                  111,
+                  111,
+                  108
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "loan_pool.shard_id",
+                "account": "LoanPool"
+              }
+            ]
+          }
+        },
+        {
+          "name": "liquidator",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "liquidator_token_account",
+          "writable": true
+        },
+        {
+          "name": "lender_token_account",
+          "writable": true
+        },
+        {
+          "name": "vault_collateral_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116,
+                  95,
+                  99,
+                  111,
+                  108,
+                  108,
+                  97,
+                  116,
+                  101,
+                  114,
+                  97,
+                  108
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "loan_pool.shard_id",
+                "account": "LoanPool"
+              }
+            ]
+          }
+        },
+        {
+          "name": "raydium_amm_program"
+        },
+        {
+          "name": "amm",
+          "writable": true
+        },
+        {
+          "name": "amm_authority"
+        },
+        {
+          "name": "amm_open_orders",
+          "writable": true
+        },
+        {
+          "name": "amm_coin_vault",
+          "writable": true
+        },
+        {
+          "name": "amm_pc_vault",
+          "writable": true
+        },
+        {
+          "name": "market_program"
+        },
+        {
+          "name": "market",
+          "writable": true
+        },
+        {
+          "name": "market_bids",
+          "writable": true
+        },
+        {
+          "name": "market_asks",
+          "writable": true
+        },
+        {
+          "name": "market_event_queue",
+          "writable": true
+        },
+        {
+          "name": "market_coin_vault",
+          "writable": true
+        },
+        {
+          "name": "market_pc_vault",
+          "writable": true
+        },
+        {
+          "name": "market_vault_signer"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "loan_idx",
+          "type": "u64"
+        },
+        {
+          "name": "minimum_amount_out",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "repay",
+      "discriminator": [
+        234,
+        103,
+        67,
+        82,
+        208,
+        234,
+        219,
+        166
+      ],
+      "accounts": [
+        {
+          "name": "lend_auction",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  101,
+                  110,
+                  100,
+                  95,
+                  97,
+                  117,
+                  99,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "loan_pool",
+          "writable": true
+        },
+        {
+          "name": "borrower",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "borrower_token_account",
+          "writable": true
+        },
+        {
+          "name": "borrower_collateral_account",
+          "writable": true
+        },
+        {
+          "name": "lender_token_account",
+          "writable": true
+        },
+        {
+          "name": "vault_collateral_account",
+          "writable": true
+        },
+        {
+          "name": "token_mint"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "loan_idx",
+          "type": "u64"
+        },
+        {
+          "name": "rate",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "submit_ask",
+      "discriminator": [
+        93,
+        207,
+        8,
+        157,
+        222,
+        152,
+        88,
+        80
+      ],
+      "accounts": [
+        {
+          "name": "lend_auction",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  101,
+                  110,
+                  100,
+                  95,
+                  97,
+                  117,
+                  99,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "shard_pool",
+          "writable": true
+        },
+        {
+          "name": "loan_pool",
+          "writable": true
         },
         {
           "name": "asker",
-          "isMut": true,
-          "isSigner": true
+          "writable": true,
+          "signer": true
         },
         {
-          "name": "askerCollateralAccount",
-          "isMut": true,
-          "isSigner": false
+          "name": "asker_collateral_account",
+          "writable": true
         },
         {
-          "name": "borrowerTokenAccount",
-          "isMut": true,
-          "isSigner": false
+          "name": "borrower_token_account",
+          "writable": true
         },
         {
-          "name": "vaultTokenAccount",
-          "isMut": true,
-          "isSigner": false
+          "name": "vault_token_account",
+          "writable": true
         },
         {
-          "name": "vaultCollateralAccount",
-          "isMut": true,
-          "isSigner": false
+          "name": "vault_collateral_account",
+          "writable": true
         },
         {
-          "name": "tokenMint",
-          "isMut": false,
-          "isSigner": false
+          "name": "token_mint"
         },
         {
-          "name": "collateralMint",
-          "isMut": false,
-          "isSigner": false
+          "name": "collateral_mint"
         },
         {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         },
         {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
         }
       ],
       "args": [
@@ -141,7 +523,7 @@
           "type": "u64"
         },
         {
-          "name": "maxRate",
+          "name": "max_rate",
           "type": "u8"
         },
         {
@@ -151,62 +533,162 @@
       ]
     },
     {
-      "name": "repay",
+      "name": "submit_bid",
+      "discriminator": [
+        19,
+        164,
+        237,
+        254,
+        64,
+        139,
+        237,
+        93
+      ],
       "accounts": [
         {
-          "name": "lendAuction",
-          "isMut": true,
-          "isSigner": false
+          "name": "lend_auction",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  101,
+                  110,
+                  100,
+                  95,
+                  97,
+                  117,
+                  99,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              }
+            ]
+          }
         },
         {
-          "name": "loanPool",
-          "isMut": true,
-          "isSigner": false
+          "name": "shard_pool",
+          "writable": true
         },
         {
-          "name": "borrower",
-          "isMut": true,
-          "isSigner": true
+          "name": "loan_pool",
+          "writable": true
         },
         {
-          "name": "borrowerTokenAccount",
-          "isMut": true,
-          "isSigner": false
+          "name": "bidder",
+          "writable": true,
+          "signer": true
         },
         {
-          "name": "borrowerCollateralAccount",
-          "isMut": true,
-          "isSigner": false
+          "name": "bidder_token_account",
+          "writable": true
         },
         {
-          "name": "lenderTokenAccount",
-          "isMut": true,
-          "isSigner": false
+          "name": "borrower_token_account",
+          "writable": true
         },
         {
-          "name": "vaultCollateralAccount",
-          "isMut": true,
-          "isSigner": false
+          "name": "vault_token_account",
+          "writable": true
         },
         {
-          "name": "tokenMint",
-          "isMut": false,
-          "isSigner": false
+          "name": "token_mint"
         },
         {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
         }
       ],
       "args": [
         {
-          "name": "loanIdx",
+          "name": "amount",
           "type": "u64"
         },
         {
-          "name": "rate",
+          "name": "min_rate",
           "type": "u8"
+        },
+        {
+          "name": "duration_slots",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "withdraw_fees",
+      "discriminator": [
+        198,
+        212,
+        171,
+        109,
+        144,
+        215,
+        174,
+        89
+      ],
+      "accounts": [
+        {
+          "name": "lend_auction",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  101,
+                  110,
+                  100,
+                  95,
+                  97,
+                  117,
+                  99,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "fee_vault",
+          "writable": true
+        },
+        {
+          "name": "admin_token_account",
+          "writable": true
+        },
+        {
+          "name": "token_mint"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "shard_id",
+          "type": "u64"
+        },
+        {
+          "name": "amount",
+          "type": "u64"
         }
       ]
     }
@@ -214,112 +696,281 @@
   "accounts": [
     {
       "name": "LendAuction",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "admin",
-            "type": "pubkey"
-          },
-          {
-            "name": "shardCount",
-            "type": "u64"
-          },
-          {
-            "name": "totalLoans",
-            "type": "u64"
-          },
-          {
-            "name": "supportedTokens",
-            "type": {
-              "vec": "pubkey"
-            }
-          }
-        ]
-      }
-    },
-    {
-      "name": "ShardPool",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "shardId",
-            "type": "u64"
-          },
-          {
-            "name": "bids",
-            "type": {
-              "vec": {
-                "defined": "Bid"
-              }
-            }
-          },
-          {
-            "name": "asks",
-            "type": {
-              "vec": {
-                "defined": "Ask"
-              }
-            }
-          }
-        ]
-      }
+      "discriminator": [
+        5,
+        2,
+        26,
+        108,
+        218,
+        121,
+        40,
+        252
+      ]
     },
     {
       "name": "LoanPool",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "shardId",
-            "type": "u64"
-          },
-          {
-            "name": "loans",
-            "type": {
-              "vec": {
-                "defined": "Loan"
-              }
-            }
-          }
-        ]
-      }
+      "discriminator": [
+        179,
+        24,
+        123,
+        83,
+        155,
+        186,
+        17,
+        89
+      ]
+    },
+    {
+      "name": "ShardPool",
+      "discriminator": [
+        126,
+        2,
+        0,
+        169,
+        235,
+        240,
+        141,
+        128
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "AskExpired",
+      "discriminator": [
+        101,
+        199,
+        142,
+        212,
+        163,
+        162,
+        162,
+        150
+      ]
+    },
+    {
+      "name": "AskSubmitted",
+      "discriminator": [
+        171,
+        46,
+        152,
+        155,
+        173,
+        224,
+        63,
+        192
+      ]
+    },
+    {
+      "name": "AuctionInitialized",
+      "discriminator": [
+        18,
+        7,
+        64,
+        239,
+        134,
+        184,
+        173,
+        108
+      ]
+    },
+    {
+      "name": "BidExpired",
+      "discriminator": [
+        116,
+        54,
+        204,
+        245,
+        160,
+        244,
+        77,
+        97
+      ]
+    },
+    {
+      "name": "BidSubmitted",
+      "discriminator": [
+        116,
+        72,
+        108,
+        240,
+        175,
+        70,
+        56,
+        22
+      ]
+    },
+    {
+      "name": "FeesWithdrawn",
+      "discriminator": [
+        234,
+        15,
+        0,
+        119,
+        148,
+        241,
+        40,
+        21
+      ]
+    },
+    {
+      "name": "LoanIssued",
+      "discriminator": [
+        247,
+        124,
+        108,
+        138,
+        161,
+        77,
+        248,
+        67
+      ]
+    },
+    {
+      "name": "LoanLiquidated",
+      "discriminator": [
+        1,
+        29,
+        28,
+        96,
+        66,
+        95,
+        8,
+        204
+      ]
+    },
+    {
+      "name": "LoanRepaid",
+      "discriminator": [
+        202,
+        183,
+        88,
+        60,
+        211,
+        54,
+        142,
+        243
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "InvalidShard",
+      "msg": "Invalid shard ID"
+    },
+    {
+      "code": 6001,
+      "name": "ShardMismatch",
+      "msg": "Shard mismatch"
+    },
+    {
+      "code": 6002,
+      "name": "PoolFull",
+      "msg": "Shard pool is full"
+    },
+    {
+      "code": 6003,
+      "name": "NoMatchesFound",
+      "msg": "No matches found"
+    },
+    {
+      "code": 6004,
+      "name": "AlreadyRepaid",
+      "msg": "Loan already repaid"
+    },
+    {
+      "code": 6005,
+      "name": "PartialMatchNotAllowed",
+      "msg": "Partial match not allowed"
+    },
+    {
+      "code": 6006,
+      "name": "UnsupportedToken",
+      "msg": "Unsupported token"
+    },
+    {
+      "code": 6007,
+      "name": "UnsupportedCollateral",
+      "msg": "Unsupported collateral token"
+    },
+    {
+      "code": 6008,
+      "name": "InvalidRepaymentToken",
+      "msg": "Invalid repayment token"
+    },
+    {
+      "code": 6009,
+      "name": "LoanNotUnhealthy",
+      "msg": "Loan is not unhealthy"
+    },
+    {
+      "code": 6010,
+      "name": "InsufficientCollateral",
+      "msg": "Insufficient collateral for healthy loan"
+    },
+    {
+      "code": 6011,
+      "name": "InvalidDuration",
+      "msg": "Invalid loan duration"
+    },
+    {
+      "code": 6012,
+      "name": "Unauthorized",
+      "msg": "Unauthorized access"
+    },
+    {
+      "code": 6013,
+      "name": "InsufficientFunds",
+      "msg": "Insufficient funds in fee vault"
+    },
+    {
+      "code": 6014,
+      "name": "Overflow",
+      "msg": "Arithmetic overflow"
+    },
+    {
+      "code": 6015,
+      "name": "InvalidTokenAccount",
+      "msg": "Invalid token account"
+    },
+    {
+      "code": 6016,
+      "name": "InvalidVaultAccount",
+      "msg": "Invalid vault account"
+    },
+    {
+      "code": 6017,
+      "name": "InvalidShardCount",
+      "msg": "Invalid shard count"
+    },
+    {
+      "code": 6018,
+      "name": "NoSupportedTokens",
+      "msg": "No supported tokens provided"
+    },
+    {
+      "code": 6019,
+      "name": "InvalidAmount",
+      "msg": "Invalid amount"
+    },
+    {
+      "code": 6020,
+      "name": "InvalidCollateral",
+      "msg": "Invalid collateral amount"
+    },
+    {
+      "code": 6021,
+      "name": "InvalidLoanIndex",
+      "msg": "Invalid loan index"
+    },
+    {
+      "code": 6022,
+      "name": "InsufficientSwapProceeds",
+      "msg": "Insufficient swap proceeds"
     }
   ],
   "types": [
-    {
-      "name": "Bid",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "lender",
-            "type": "pubkey"
-          },
-          {
-            "name": "amount",
-            "type": "u64"
-          },
-          {
-            "name": "minRate",
-            "type": "u8"
-          },
-          {
-            "name": "slot",
-            "type": "u64"
-          },
-          {
-            "name": "tokenMint",
-            "type": "pubkey"
-          },
-          {
-            "name": "durationSlots",
-            "type": "u64"
-          }
-        ]
-      }
-    },
     {
       "name": "Ask",
       "type": {
@@ -334,7 +985,7 @@
             "type": "u64"
           },
           {
-            "name": "maxRate",
+            "name": "max_rate",
             "type": "u8"
           },
           {
@@ -346,12 +997,244 @@
             "type": "u64"
           },
           {
-            "name": "tokenMint",
+            "name": "token_mint",
             "type": "pubkey"
           },
           {
-            "name": "collateralMint",
+            "name": "collateral_mint",
             "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AskExpired",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "borrower",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "refund_amount",
+            "type": "u64"
+          },
+          {
+            "name": "fee_amount",
+            "type": "u64"
+          },
+          {
+            "name": "shard_id",
+            "type": "u64"
+          },
+          {
+            "name": "token_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "collateral_mint",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AskSubmitted",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "borrower",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "max_rate",
+            "type": "u8"
+          },
+          {
+            "name": "shard_id",
+            "type": "u64"
+          },
+          {
+            "name": "token_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "collateral_mint",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AuctionInitialized",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "shard_count",
+            "type": "u64"
+          },
+          {
+            "name": "supported_tokens",
+            "type": {
+              "vec": "pubkey"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Bid",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "lender",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "min_rate",
+            "type": "u8"
+          },
+          {
+            "name": "slot",
+            "type": "u64"
+          },
+          {
+            "name": "token_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "duration_slots",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "BidExpired",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "lender",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "refund_amount",
+            "type": "u64"
+          },
+          {
+            "name": "fee_amount",
+            "type": "u64"
+          },
+          {
+            "name": "shard_id",
+            "type": "u64"
+          },
+          {
+            "name": "token_mint",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "BidSubmitted",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "lender",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "min_rate",
+            "type": "u8"
+          },
+          {
+            "name": "shard_id",
+            "type": "u64"
+          },
+          {
+            "name": "token_mint",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "FeesWithdrawn",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "shard_id",
+            "type": "u64"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "token_mint",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "LendAuction",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "shard_count",
+            "type": "u64"
+          },
+          {
+            "name": "total_loans",
+            "type": "u64"
+          },
+          {
+            "name": "supported_tokens",
+            "type": {
+              "vec": "pubkey"
+            }
           }
         ]
       }
@@ -386,28 +1269,193 @@
             "type": "bool"
           },
           {
-            "name": "shardId",
+            "name": "shard_id",
             "type": "u64"
           },
           {
-            "name": "tokenMint",
+            "name": "token_mint",
             "type": "pubkey"
           },
           {
-            "name": "collateralMint",
+            "name": "collateral_mint",
             "type": "pubkey"
           },
           {
-            "name": "startSlot",
+            "name": "start_slot",
             "type": "u64"
           },
           {
-            "name": "durationSlots",
+            "name": "duration_slots",
             "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "LoanIssued",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "lender",
+            "type": "pubkey"
+          },
+          {
+            "name": "borrower",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "rate",
+            "type": "u8"
+          },
+          {
+            "name": "shard_id",
+            "type": "u64"
+          },
+          {
+            "name": "token_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "collateral_mint",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "LoanLiquidated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "lender",
+            "type": "pubkey"
+          },
+          {
+            "name": "borrower",
+            "type": "pubkey"
+          },
+          {
+            "name": "liquidator",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "collateral",
+            "type": "u64"
+          },
+          {
+            "name": "profit",
+            "type": "u64"
+          },
+          {
+            "name": "shard_id",
+            "type": "u64"
+          },
+          {
+            "name": "token_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "collateral_mint",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "LoanPool",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "shard_id",
+            "type": "u64"
+          },
+          {
+            "name": "loans",
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "Loan"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "LoanRepaid",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "lender",
+            "type": "pubkey"
+          },
+          {
+            "name": "borrower",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "shard_id",
+            "type": "u64"
+          },
+          {
+            "name": "token_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "collateral_mint",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ShardPool",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "shard_id",
+            "type": "u64"
+          },
+          {
+            "name": "bids",
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "Bid"
+                }
+              }
+            }
+          },
+          {
+            "name": "asks",
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "Ask"
+                }
+              }
+            }
           }
         ]
       }
     }
   ]
 }
-
