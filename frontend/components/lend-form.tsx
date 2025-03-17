@@ -152,7 +152,7 @@ export function LendForm() {
 
           <div className="space-y-2">
             <label htmlFor="duration" className="text-sm font-medium">
-              Duration (slots)
+              Duration (days)
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
