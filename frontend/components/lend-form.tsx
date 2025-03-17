@@ -159,7 +159,7 @@ export function LendForm() {
                     <Info className="h-4 w-4 ml-1 text-muted-foreground inline" />
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p className="max-w-xs">The duration of your loan offer in Solana slots. 1 slot ≈ 400ms.</p>
+                    <p className="max-w-xs">The duration of your loan offer in days.</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -218,7 +218,7 @@ export function LendForm() {
 
             <div className="flex justify-between items-center">
               <span>Duration</span>
-              <span>{Number.parseInt(duration).toLocaleString()} slots</span>
+              <span>{Number.parseInt(duration).toLocaleString()} days</span>
             </div>
 
             <div className="flex justify-between items-center">
