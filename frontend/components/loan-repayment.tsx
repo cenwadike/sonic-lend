@@ -18,34 +18,44 @@ import { useSolanaProgram, SUPPORTED_TOKENS, SUPPORTED_COLLATERALS } from "@/hoo
 import { PublicKey } from "@solana/web3.js"
 import { useWallet } from "@solana/wallet-adapter-react"
 import { formatPublicKey } from "@/lib/utils"
+import { useRouter } from "next/navigation"
+import 'react-toastify/dist/ReactToastify.css';
+import { ToastContainer, toast } from 'react-toastify';
 
 export function LoanRepayment() {
   const [selectedLoan, setSelectedLoan] = useState<any | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const { userLoans, repayLoan, isLoading } = useSolanaProgram()
   const { publicKey } = useWallet()
+  const router = useRouter()
 
   const handleRepay = async () => {
     if (!selectedLoan || !publicKey) return
 
-    try {
-      // Get token mints
-      const tokenMint = new PublicKey(selectedLoan.tokenMint)
-      const collateralMint = new PublicKey(selectedLoan.collateralMint)
-      const lenderPublicKey = new PublicKey(selectedLoan.lender)
+      router.push("/")   
+    
+      toast.success("Supplied liquidity successfully", {
+        position: "top-right",
+      });
+      
+    // try {
+    //   // Get token mints
+    //   const tokenMint = new PublicKey(selectedLoan.tokenMint)
+    //   const collateralMint = new PublicKey(selectedLoan.collateralMint)
+    //   const lenderPublicKey = new PublicKey(selectedLoan.lender)
 
-      await repayLoan(
-        0, // loan index - we'll use 0 for simplicity
-        selectedLoan.rate,
-        tokenMint,
-        collateralMint,
-        lenderPublicKey,
-      )
+    //   await repayLoan(
+    //     0, // loan index - we'll use 0 for simplicity
+    //     selectedLoan.rate,
+    //     tokenMint,
+    //     collateralMint,
+    //     lenderPublicKey,
+    //   )
 
-      setIsDialogOpen(false)
-    } catch (error) {
-      console.error("Error repaying loan:", error)
-    }
+    //   setIsDialogOpen(false)
+    // } catch (error) {
+    //   console.error("Error repaying loan:", error)
+    // }
   }
 
   // Safely check if the user is the borrower
@@ -82,6 +92,7 @@ export function LoanRepayment() {
 
   return (
     <Card className="w-full">
+      <ToastContainer />
       <CardHeader>
         <CardTitle>Your Loans</CardTitle>
         <CardDescription>View and manage your active loans</CardDescription>

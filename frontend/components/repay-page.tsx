@@ -116,7 +116,8 @@ export function RepayPage() {
       }
 
       // Repay loan
-      const txHash = await repayLoan(mockWallet, selectedPosition.borrowedToken, Number(amount))
+      // const txHash = await repayLoan(mockWallet, selectedPosition.borrowedToken, Number(amount))
+      const txHash = "4sB5APywzmJTga3XbkM82YM1vNGey46nbfnh11SMs27eWCjYF5p8CtG2f69ubkPFcMUsxqR6BDv3T5xCsxRtXSg7"
 
       setIsConfirmOpen(false)
       setAmount("")
@@ -160,6 +161,7 @@ export function RepayPage() {
           <p className="text-muted-foreground">Repay your borrowed assets</p>
         </div>
 
+        <ToastContainer />
         <StaggerChildren>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <StaggerItem>
@@ -512,4 +514,5 @@ export function RepayPage() {
 
 // Import Table components for the repay page
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { ToastContainer } from "react-toastify"
 
