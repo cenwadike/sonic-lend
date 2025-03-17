@@ -111,7 +111,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
           >
-            SonicLend
+            Lend
           </motion.h1>
 
           <motion.p
@@ -120,7 +120,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
           >
-            A decentralized lending protocol built on the Cosmos blockchain ecosystem
+            A decentralized lending protocol built on Sonic SVM
           </motion.p>
 
           <motion.div
@@ -143,7 +143,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 1.5 }}
         >
-          © {new Date().getFullYear()} SonicLend. All rights reserved.
+          © {new Date().getFullYear()} Lend. All rights reserved.
         </motion.div>
       </div>
 

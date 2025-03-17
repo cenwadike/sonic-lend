@@ -56,7 +56,7 @@ export function Logo({ className }: LogoProps) {
           </defs>
         </svg>
       </motion.div>
-      <span className="font-bold text-xl">SonicLend</span>
+      <span className="font-bold text-xl">Lend</span>
     </div>
   )
 }

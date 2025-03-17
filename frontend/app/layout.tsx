@@ -9,7 +9,7 @@ import { AuthGuard } from "@/components/auth-guard"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "SonicLend | Sonic Hyperscalable Lending",
+  title: "Lend | Sonic Hyperscalable Lending",
   description: "A decentralized lending protocol built on Sonic SVM",
     generator: 'v0.dev'
 }

@@ -161,7 +161,7 @@ export function LiquidatePage() {
   const handleMaxClick = () => {
     const position = getSelectedPositionDetails()
     if (position) {
-      // In SonicLend, you can liquidate up to 50% of the borrowed amount
+      // In Lend, you can liquidate up to 50% of the borrowed amount
       const maxLiquidationAmount = position.totalBorrowed * 0.5
       setAmount(maxLiquidationAmount.toString())
     }
@@ -174,13 +174,13 @@ export function LiquidatePage() {
       <div className="space-y-8">
         <div className="flex flex-col space-y-4">
           <h1 className="text-3xl font-bold">Liquidations</h1>
-          <p className="text-muted-foreground">Liquidate undercollateralized positions and earn rewards</p>
+          <p className="text-muted-foreground">Liquidate under collateralized positions and earn rewards</p>
         </div>
 
         <Card>
           <CardHeader>
             <CardTitle>Liquidation Overview</CardTitle>
-            <CardDescription>How liquidations work in SonicLend</CardDescription>
+            <CardDescription>How liquidations work in Lend</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-start gap-4 p-4 bg-amber-500/10 rounded-md border border-amber-500/20">
@@ -214,7 +214,7 @@ export function LiquidatePage() {
 
             <div className="space-y-2">
               <h3 className="font-medium flex items-center">
-                SonicLend Risk Management
+                Lend Risk Management
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -222,7 +222,7 @@ export function LiquidatePage() {
                     </TooltipTrigger>
                     <TooltipContent>
                       <p className="max-w-xs">
-                        SonicLend requires 1.5x collateral minimum, with liquidation at 1.2x, ensuring stability without
+                        Lend requires 1.5x collateral minimum, with liquidation at 1.2x, ensuring stability without
                         oracles.
                       </p>
                     </TooltipContent>
@@ -230,7 +230,7 @@ export function LiquidatePage() {
                 </TooltipProvider>
               </h3>
               <p className="text-sm text-muted-foreground">
-                SonicLend requires a minimum collateral ratio of 150% (1.5x) for all loans. Positions become eligible
+                Lend requires a minimum collateral ratio of 150% (1.5x) for all loans. Positions become eligible
                 for liquidation when the health factor drops below 1.0, which corresponds to a collateral ratio of 120%
                 (1.2x).
               </p>

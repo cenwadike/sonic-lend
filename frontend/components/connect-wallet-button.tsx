@@ -214,7 +214,7 @@ export function ConnectWalletButton() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Connect your wallet</DialogTitle>
-            <DialogDescription>Connect your Phantom wallet to use SonicLend</DialogDescription>
+            <DialogDescription>Connect your Phantom wallet to use Lend</DialogDescription>
           </DialogHeader>
           <div className="flex flex-col space-y-4 mt-4">
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>

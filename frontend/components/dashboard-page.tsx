@@ -72,8 +72,8 @@ export function DashboardPage() {
     <FadeIn>
       <div className="space-y-8">
         <div className="flex flex-col space-y-4">
-          <h1 className="text-3xl font-bold">SonicLend Dashboard</h1>
-          <p className="text-muted-foreground">Hyperscalable capital efficient lending on Sonic SVM and Solana</p>
+          <h1 className="text-3xl font-bold">Lend Dashboard</h1>
+          <p className="text-muted-foreground">Hyperscalable capital efficient lending on Sonic SVM</p>
         </div>
 
         <StaggerChildren>
@@ -245,7 +245,7 @@ export function DashboardPage() {
 
               <Card className="border-2 border-transparent hover:border-primary/20 transition-all duration-300">
                 <CardHeader>
-                  <CardTitle>SonicLend Protocol Features</CardTitle>
+                  <CardTitle>Lend Protocol Features</CardTitle>
                   <CardDescription>Capital efficient lending on Sonic SVM</CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -352,7 +352,7 @@ export function DashboardPage() {
               <Card className="mt-4 border-2 border-transparent hover:border-primary/20 transition-all duration-300">
                 <CardHeader>
                   <CardTitle>Market Overview</CardTitle>
-                  <CardDescription>Available assets in the SonicLend protocol</CardDescription>
+                  <CardDescription>Available assets in the Lend protocol</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <AssetTable

@@ -70,7 +70,7 @@ export default function LoginPage() {
     <AuthLayout>
       <Card className="border-2 border-transparent hover:border-primary/20 transition-all duration-300">
         <CardHeader>
-          <CardTitle className="text-2xl">Welcome to SonicLend</CardTitle>
+          <CardTitle className="text-2xl">Welcome to Lend</CardTitle>
           <CardDescription>Connect your wallet to access the decentralized lending platform</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

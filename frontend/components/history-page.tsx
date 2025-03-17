@@ -32,7 +32,7 @@ export function HistoryPage() {
     {
       id: "tx1",
       type: "deposit",
-      asset: "ATOM",
+      asset: "SOL",
       amount: 10,
       value: 120,
       timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
@@ -62,7 +62,7 @@ export function HistoryPage() {
     {
       id: "tx4",
       type: "withdraw",
-      asset: "ATOM",
+      asset: "SOL",
       amount: 5,
       value: 60,
       timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3), // 3 days ago
@@ -72,7 +72,7 @@ export function HistoryPage() {
     {
       id: "tx5",
       type: "liquidate",
-      asset: "JUNO",
+      asset: "USDC",
       amount: 20,
       value: 60,
       timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5), // 5 days ago
@@ -163,7 +163,7 @@ export function HistoryPage() {
     <div className="space-y-8">
       <div className="flex flex-col space-y-4">
         <h1 className="text-3xl font-bold">Transaction History</h1>
-        <p className="text-muted-foreground">View your past transactions on SonicLend</p>
+        <p className="text-muted-foreground">View your past transactions on Lend</p>
       </div>
 
       <Card>

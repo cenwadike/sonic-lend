@@ -1,12 +1,12 @@
-# SonicLend: Hyperscalable capital efficient lending protocol on Sonic SVM and Solana.
+# Lend: Hyperscalable capital efficient lending protocol on Sonic SVM.
 
-SonicLend is a decentralized lending protocol built on Sonic SVM, optimizing capital efficiency
+Lend is a decentralized lending protocol built on Sonic SVM, optimizing capital efficiency
 and scalability for DeFi users. Designed to leverage Sonic’s HyperGrid sharding, it offers a 
 scalable and robust lending solution.
 
 ## Key Features
 
-![alt text](stats.jpeg)
+![alt text](stats.png)
 
 - **Enhanced Capital Efficiency**: Continuous matching with atomic splitting ensures funds are utilized effectively, pairing large positions with smaller counterparts seamlessly.
 - **User Convenience**: Stale positions are refunded automatically (99.5%), with a 0.5% fee to deter spam—no manual claims required.
@@ -24,10 +24,10 @@ scalable and robust lending solution.
 
 ## Sonic Advantage
 
-SonicLend taps into Sonic SVM’s sharding and efficiency to deliver a lending protocol that’s secure, 
+Lend taps into Sonic SVM’s sharding and efficiency to deliver a lending protocol that’s secure, 
 scalable, and capital-efficient—ready for the future of DeFi.
 
 ---
 
 **Deploy**: `anchor deploy --provider.cluster https://testnet.sonic.game`  
-**Contribute**: Open an issue or PR on Sonic testnet!
+**Contribute**: Open an issue or PR.
