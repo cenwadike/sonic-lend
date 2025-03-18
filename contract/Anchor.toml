@@ -11,7 +11,8 @@ contract = "EDvhvdnYVX2JsuAXvJXvBN3jd79ceNYMMnw11JSvzCPo"
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "Localnet"
+# cluster = "Localnet"
+cluster = "https://api.testnet.sonic.game"
 wallet = "~/.config/solana/id.json"
 
 [scripts]

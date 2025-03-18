@@ -22,10 +22,42 @@ scalable and robust lending solution.
 4. Loans accrue interest; repay or face liquidation if health drops below 1.2x.
 5. Admin withdraws fees from shard-specific treasuries.
 
-## Sonic Advantage
+## Lend/Sonic Advantage
 
 Lend taps into Sonic SVM’s sharding and efficiency to deliver a lending protocol that’s secure, 
 scalable, and capital-efficient—ready for the future of DeFi.
+
+## Steps to Test Lend Contract
+
+Install the Following:
+- Anchor (v0.29.0)
+- Solana CLI (v1.18.26)
+- NPM (v11.1.0)
+- Node (v23.6.0)
+
+### Build the Contract:
+
+```bash
+    anchor build
+```
+
+### Run Test
+
+- Run Local Solana Validator:
+
+```bash
+    solana-test-validator -r
+```
+
+- Uncomment the test you want to test in `contract/tests/contract.ts` and Run Tests in another terminal:
+
+```bash
+    anchor test --skip-local-validator
+```
+
+## Steps to Test Lend Frontend (Prototype)
+
+- Visit `https://sonic-lend.vercel.app`
 
 ---
 

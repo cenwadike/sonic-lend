@@ -5,9 +5,26 @@ import { Keypair, LAMPORTS_PER_SOL, PublicKey, Signer } from "@solana/web3.js";
 import { assert } from "chai";
 import { createAccount, createMint, getAccount, getOrCreateAssociatedTokenAccount, mintTo } from "@solana/spl-token";
 import { sha256 } from "js-sha256";
+import { readFileSync } from "fs";
+import path from 'path';
+import os from 'os';
 
 async function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function loadSecretKey(filePath: string): Uint8Array {
+  try {
+    const resolvedPath = filePath.startsWith('~') ? path.join(os.homedir(), filePath.slice(1)) : filePath;
+    const keyData = readFileSync(resolvedPath, 'utf-8');
+    const keyArray = JSON.parse(keyData);
+    if (!Array.isArray(keyArray) || keyArray.length !== 64) {
+      throw new Error('Invalid secret key format or size');
+    }
+    return Uint8Array.from(keyArray);
+  } catch (error) {
+    throw new Error(`Failed to load secret key: ${error.message}`);
+  }
 }
 
 describe("contract", () => {
@@ -17,7 +34,11 @@ describe("contract", () => {
 
   const program = anchor.workspace.Contract as Program<Contract>;
 
-  const admin = Keypair.generate();
+  const secretKeyFilePath = process.env.PAYER_SECRET_KEY || '~/.config/solana/id.json';
+  const payerSecretKey = loadSecretKey(secretKeyFilePath);
+  const admin = Keypair.fromSecretKey(payerSecretKey);
+
+  // const admin = Keypair.generate();
   const adminSig: Signer = {
     publicKey: admin.publicKey,
     secretKey: admin.secretKey
@@ -28,12 +49,15 @@ describe("contract", () => {
   let collateralMint: PublicKey;
 
   before(async () => {
-    await provider.connection.confirmTransaction(
-      await provider.connection.requestAirdrop(admin.publicKey, 10 * LAMPORTS_PER_SOL),
-      "confirmed"
-    );
-    tokenMint = await createMint(provider.connection, admin, admin.publicKey, null, 6);
-    collateralMint = await createMint(provider.connection, admin, admin.publicKey, null, 6);
+    // await provider.connection.confirmTransaction(
+    //   await provider.connection.requestAirdrop(admin.publicKey, 10 * LAMPORTS_PER_SOL),
+    //   "confirmed"
+    // );
+    // tokenMint = await createMint(provider.connection, admin, admin.publicKey, null, 6);
+    // collateralMint = await createMint(provider.connection, admin, admin.publicKey, null, 6);
+
+    collateralMint = new PublicKey("So11111111111111111111111111111111111111112")
+    tokenMint = new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v")
   });
 
   it("Is initialized!", async () => {
@@ -44,21 +68,21 @@ describe("contract", () => {
       program.programId
     );
 
-    await program.provider.connection.confirmTransaction(
-      await program.provider.connection.requestAirdrop(
-        admin.publicKey,
-        3 * LAMPORTS_PER_SOL
-      ),
-      "confirmed"
-    );
+    // await program.provider.connection.confirmTransaction(
+    //   await program.provider.connection.requestAirdrop(
+    //     admin.publicKey,
+    //     3 * LAMPORTS_PER_SOL
+    //   ),
+    //   "confirmed"
+    // );
 
-    await program.provider.connection.confirmTransaction(
-      await program.provider.connection.requestAirdrop(
-        program.provider.publicKey,
-        3 * LAMPORTS_PER_SOL
-      ),
-      "confirmed"
-    );
+    // await program.provider.connection.confirmTransaction(
+    //   await program.provider.connection.requestAirdrop(
+    //     program.provider.publicKey,
+    //     3 * LAMPORTS_PER_SOL
+    //   ),
+    //   "confirmed"
+    // );
     
     // Parameters for initialization
     const shardCount = new anchor.BN(1);
@@ -504,192 +528,192 @@ describe("contract", () => {
   //   assert.equal(bidSubmittedEvent.data.tokenMint.toBase58(), tokenMint.toBase58());
   // });
 
-  // it("Submits a bid with matching ask and issues a loan", async () => {
-  //   await provider.connection.confirmTransaction(
-  //     await provider.connection.requestAirdrop(admin.publicKey, 10 * LAMPORTS_PER_SOL),
-  //     "confirmed"
-  //   );
+  it("Submits a bid with matching ask and issues a loan", async () => {
+    await provider.connection.confirmTransaction(
+      await provider.connection.requestAirdrop(admin.publicKey, 10 * LAMPORTS_PER_SOL),
+      "confirmed"
+    );
 
-  //   const [lendAuctionPda] = PublicKey.findProgramAddressSync(
-  //     [Buffer.from("lend_auction")],
-  //     program.programId
-  //   );
+    const [lendAuctionPda] = PublicKey.findProgramAddressSync(
+      [Buffer.from("lend_auction")],
+      program.programId
+    );
 
-  //   const info = await provider.connection.getAccountInfo(lendAuctionPda);
-  //   if (!info) {
-  //     await program.methods
-  //       .initialize(new anchor.BN(1), [tokenMint, collateralMint])
-  //       .accounts({
-  //         admin: admin.publicKey,
-  //       })
-  //       .signers([admin])
-  //       .rpc();
-  //   }
+    const info = await provider.connection.getAccountInfo(lendAuctionPda);
+    if (!info) {
+      await program.methods
+        .initialize(new anchor.BN(1), [tokenMint, collateralMint])
+        .accounts({
+          admin: admin.publicKey,
+        })
+        .signers([admin])
+        .rpc();
+    }
 
-  //   const shardCount = 1;
-  //   const minRate = 5;
-  //   const shardId = computeShardId(tokenMint, minRate, shardCount);
+    const shardCount = 1;
+    const minRate = 5;
+    const shardId = computeShardId(tokenMint, minRate, shardCount);
 
-  //   const [shardPoolPda] = PublicKey.findProgramAddressSync(
-  //     [Buffer.from("shard_pool"), shardId.toArrayLike(Buffer, "le", 8)],
-  //     program.programId
-  //   );
-  //   const [loanPoolPda] = PublicKey.findProgramAddressSync(
-  //     [Buffer.from("loan_pool"), shardId.toArrayLike(Buffer, "le", 8)],
-  //     program.programId
-  //   );
+    const [shardPoolPda] = PublicKey.findProgramAddressSync(
+      [Buffer.from("shard_pool"), shardId.toArrayLike(Buffer, "le", 8)],
+      program.programId
+    );
+    const [loanPoolPda] = PublicKey.findProgramAddressSync(
+      [Buffer.from("loan_pool"), shardId.toArrayLike(Buffer, "le", 8)],
+      program.programId
+    );
 
-  //   const asker = Keypair.generate();
-  //   await provider.connection.confirmTransaction(
-  //     await provider.connection.requestAirdrop(asker.publicKey, 2 * LAMPORTS_PER_SOL),
-  //     "confirmed"
-  //   );
-  //   const askerCollateralAccount = await anchor.utils.token.associatedAddress({
-  //     mint: collateralMint,
-  //     owner: asker.publicKey,
-  //   });
-  //   await getOrCreateAssociatedTokenAccount(
-  //     provider.connection,
-  //     admin,
-  //     collateralMint,
-  //     asker.publicKey
-  //   );
-  //   await mintTo(provider.connection, admin, collateralMint, askerCollateralAccount, admin, 2000000);
+    const asker = Keypair.generate();
+    await provider.connection.confirmTransaction(
+      await provider.connection.requestAirdrop(asker.publicKey, 2 * LAMPORTS_PER_SOL),
+      "confirmed"
+    );
+    const askerCollateralAccount = await anchor.utils.token.associatedAddress({
+      mint: collateralMint,
+      owner: asker.publicKey,
+    });
+    await getOrCreateAssociatedTokenAccount(
+      provider.connection,
+      admin,
+      collateralMint,
+      asker.publicKey
+    );
+    await mintTo(provider.connection, admin, collateralMint, askerCollateralAccount, admin, 2000000);
 
-  //   const vaultTokenAccount = await anchor.utils.token.associatedAddress({
-  //     mint: tokenMint,
-  //     owner: lendAuctionPda,
-  //   });
-  //   await getOrCreateAssociatedTokenAccount(
-  //     provider.connection,
-  //     admin,
-  //     tokenMint,
-  //     lendAuctionPda,
-  //     true
-  //   );
+    const vaultTokenAccount = await anchor.utils.token.associatedAddress({
+      mint: tokenMint,
+      owner: lendAuctionPda,
+    });
+    await getOrCreateAssociatedTokenAccount(
+      provider.connection,
+      admin,
+      tokenMint,
+      lendAuctionPda,
+      true
+    );
 
-  //   const vaultCollateralAccount = await anchor.utils.token.associatedAddress({
-  //     mint: collateralMint,
-  //     owner: lendAuctionPda,
-  //   });
-  //   await getOrCreateAssociatedTokenAccount(
-  //     provider.connection,
-  //     admin,
-  //     collateralMint,
-  //     lendAuctionPda,
-  //     true
-  //   );
+    const vaultCollateralAccount = await anchor.utils.token.associatedAddress({
+      mint: collateralMint,
+      owner: lendAuctionPda,
+    });
+    await getOrCreateAssociatedTokenAccount(
+      provider.connection,
+      admin,
+      collateralMint,
+      lendAuctionPda,
+      true
+    );
 
-  //   const borrowerTokenAccount = await anchor.utils.token.associatedAddress({
-  //     mint: tokenMint,
-  //     owner: asker.publicKey,
-  //   });
-  //   await getOrCreateAssociatedTokenAccount(
-  //     provider.connection,
-  //     admin,
-  //     tokenMint,
-  //     asker.publicKey
-  //   );
+    const borrowerTokenAccount = await anchor.utils.token.associatedAddress({
+      mint: tokenMint,
+      owner: asker.publicKey,
+    });
+    await getOrCreateAssociatedTokenAccount(
+      provider.connection,
+      admin,
+      tokenMint,
+      asker.publicKey
+    );
 
-  //   // Pre-populate an ask (assuming SubmitAsk exists with similar structure)
-  //   await program.methods
-  //     .submitAsk(new anchor.BN(500000), minRate, new anchor.BN(750000)) // Collateral = 1.5x amount
-  //     .accounts({
-  //       shardPool: shardPoolPda,
-  //       loanPool: loanPoolPda,
-  //       asker: asker.publicKey,
-  //       askerCollateralAccount: askerCollateralAccount,
-  //       borrowerTokenAccount: borrowerTokenAccount,
-  //       vaultTokenAccount: vaultTokenAccount,
-  //       vaultCollateralAccount: vaultCollateralAccount,
-  //       tokenMint: tokenMint,
-  //       collateralMint: collateralMint,
-  //     })
-  //     .signers([asker])
-  //     .rpc();
+    // Pre-populate an ask (assuming SubmitAsk exists with similar structure)
+    await program.methods
+      .submitAsk(new anchor.BN(500000), minRate, new anchor.BN(750000)) // Collateral = 1.5x amount
+      .accounts({
+        shardPool: shardPoolPda,
+        loanPool: loanPoolPda,
+        asker: asker.publicKey,
+        askerCollateralAccount: askerCollateralAccount,
+        borrowerTokenAccount: borrowerTokenAccount,
+        vaultTokenAccount: vaultTokenAccount,
+        vaultCollateralAccount: vaultCollateralAccount,
+        tokenMint: tokenMint,
+        collateralMint: collateralMint,
+      })
+      .signers([asker])
+      .rpc();
 
-  //   const bidder = Keypair.generate();
-  //   await provider.connection.confirmTransaction(
-  //     await provider.connection.requestAirdrop(bidder.publicKey, 2 * LAMPORTS_PER_SOL),
-  //     "confirmed"
-  //   );
-  //   const bidderTokenAccount = await anchor.utils.token.associatedAddress({
-  //     mint: tokenMint,
-  //     owner: bidder.publicKey,
-  //   });
-  //   await getOrCreateAssociatedTokenAccount(
-  //     provider.connection,
-  //     admin,
-  //     tokenMint,
-  //     bidder.publicKey
-  //   );
-  //   await mintTo(provider.connection, admin, tokenMint, bidderTokenAccount, admin, 1000000);
+    const bidder = Keypair.generate();
+    await provider.connection.confirmTransaction(
+      await provider.connection.requestAirdrop(bidder.publicKey, 2 * LAMPORTS_PER_SOL),
+      "confirmed"
+    );
+    const bidderTokenAccount = await anchor.utils.token.associatedAddress({
+      mint: tokenMint,
+      owner: bidder.publicKey,
+    });
+    await getOrCreateAssociatedTokenAccount(
+      provider.connection,
+      admin,
+      tokenMint,
+      bidder.publicKey
+    );
+    await mintTo(provider.connection, admin, tokenMint, bidderTokenAccount, admin, 1000000);
 
-  //   // Get loan count
-  //   const loanPoolBefore = await program.account.loanPool.fetch(loanPoolPda);
-  //   const loanCount = loanPoolBefore.loans.length; 
-  //   const tx = await program.methods
-  //     .submitBid(new anchor.BN(500000), minRate, new anchor.BN(1000))
-  //     .accounts({
-  //       shardPool: shardPoolPda,
-  //       loanPool: loanPoolPda,
-  //       bidder: bidder.publicKey,
-  //       bidderTokenAccount: bidderTokenAccount,
-  //       borrowerTokenAccount: borrowerTokenAccount,
-  //       vaultTokenAccount: vaultTokenAccount,
-  //       tokenMint: tokenMint,
-  //     })
-  //     .signers([bidder])
-  //     .rpc();
+    // Get loan count
+    const loanPoolBefore = await program.account.loanPool.fetch(loanPoolPda);
+    const loanCount = loanPoolBefore.loans.length; 
+    const tx = await program.methods
+      .submitBid(new anchor.BN(500000), minRate, new anchor.BN(1000))
+      .accounts({
+        shardPool: shardPoolPda,
+        loanPool: loanPoolPda,
+        bidder: bidder.publicKey,
+        bidderTokenAccount: bidderTokenAccount,
+        borrowerTokenAccount: borrowerTokenAccount,
+        vaultTokenAccount: vaultTokenAccount,
+        tokenMint: tokenMint,
+      })
+      .signers([bidder])
+      .rpc();
 
-  //   await provider.connection.confirmTransaction(tx, "confirmed");
+    await provider.connection.confirmTransaction(tx, "confirmed");
 
-  //   // Verify token transfers
-  //   const bidderBalance = await getAccount(provider.connection, bidderTokenAccount);
-  //   const vaultBalance = await getAccount(provider.connection, vaultTokenAccount);
-  //   const borrowerBalance = await getAccount(provider.connection, borrowerTokenAccount);
-  //   assert.equal(Number(bidderBalance.amount), 500000, "Bidder should have remaining tokens");
-  //   assert.equal(Number(vaultBalance.amount), 1500000, "Vault should be empty after loan");
-  //   assert.equal(Number(borrowerBalance.amount), 500000, "Borrower should receive loan amount");
+    // Verify token transfers
+    const bidderBalance = await getAccount(provider.connection, bidderTokenAccount);
+    const vaultBalance = await getAccount(provider.connection, vaultTokenAccount);
+    const borrowerBalance = await getAccount(provider.connection, borrowerTokenAccount);
+    assert.equal(Number(bidderBalance.amount), 500000, "Bidder should have remaining tokens");
+    assert.equal(Number(vaultBalance.amount), 1500000, "Vault should be empty after loan");
+    assert.equal(Number(borrowerBalance.amount), 500000, "Borrower should receive loan amount");
 
-  //   // Verify loan_pool state
-  //   const loanPoolAfter = await program.account.loanPool.fetch(loanPoolPda);
-  //   assert.equal(loanPoolAfter.loans.length, loanCount+1, "One loan should be issued");
-  //   assert.equal(loanPoolAfter.loans[loanPoolAfter.loans.length-1].lender.toBase58(), bidder.publicKey.toBase58());
-  //   assert.equal(loanPoolAfter.loans[loanPoolAfter.loans.length-1].borrower.toBase58(), asker.publicKey.toBase58());
-  //   assert.equal(loanPoolAfter.loans[loanPoolAfter.loans.length-1].amount.toString(), "500000");
-  //   assert.equal(loanPoolAfter.loans[loanPoolAfter.loans.length-1].rate, minRate);
-  //   assert.equal(loanPoolAfter.loans[loanPoolAfter.loans.length-1].collateral.toString(), "750000");
+    // Verify loan_pool state
+    const loanPoolAfter = await program.account.loanPool.fetch(loanPoolPda);
+    assert.equal(loanPoolAfter.loans.length, loanCount+1, "One loan should be issued");
+    assert.equal(loanPoolAfter.loans[loanPoolAfter.loans.length-1].lender.toBase58(), bidder.publicKey.toBase58());
+    assert.equal(loanPoolAfter.loans[loanPoolAfter.loans.length-1].borrower.toBase58(), asker.publicKey.toBase58());
+    assert.equal(loanPoolAfter.loans[loanPoolAfter.loans.length-1].amount.toString(), "500000");
+    assert.equal(loanPoolAfter.loans[loanPoolAfter.loans.length-1].rate, minRate);
+    assert.equal(loanPoolAfter.loans[loanPoolAfter.loans.length-1].collateral.toString(), "750000");
 
-  //   // Verify lend_auction total_loans
-  //   const lendAuction = await program.account.lendAuction.fetch(lendAuctionPda);
-  //   assert.equal(lendAuction.totalLoans.toString(), loanPoolAfter.loans.length.toString(), "Total loans should increment");
+    // Verify lend_auction total_loans
+    const lendAuction = await program.account.lendAuction.fetch(lendAuctionPda);
+    assert.equal(lendAuction.totalLoans.toString(), loanPoolAfter.loans.length.toString(), "Total loans should increment");
 
-  //   // Verify event
-  //   let signature;
-  //   for (let i = 0; i < 5; i++) {
-  //     signature = await provider.connection.getTransaction(tx, { commitment: "confirmed" });
-  //     if (signature) break;
-  //     await new Promise((resolve) => setTimeout(resolve, 1000));
-  //   }
-  //   if (!signature) throw new Error("Failed to fetch transaction");
+    // Verify event
+    let signature;
+    for (let i = 0; i < 5; i++) {
+      signature = await provider.connection.getTransaction(tx, { commitment: "confirmed" });
+      if (signature) break;
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+    if (!signature) throw new Error("Failed to fetch transaction");
 
-  //   const eventParser = new anchor.EventParser(program.programId, new anchor.BorshCoder(program.idl));
-  //   const events = eventParser.parseLogs(signature.meta.logMessages);
-  //   let loanIssuedEvent = null;
-  //   for (const event of events) {
-  //     if (event.name === "loanIssued") loanIssuedEvent = event;
-  //   }
+    const eventParser = new anchor.EventParser(program.programId, new anchor.BorshCoder(program.idl));
+    const events = eventParser.parseLogs(signature.meta.logMessages);
+    let loanIssuedEvent = null;
+    for (const event of events) {
+      if (event.name === "loanIssued") loanIssuedEvent = event;
+    }
 
-  //   assert.ok(loanIssuedEvent, "LoanIssued event should be emitted");
-  //   assert.equal(loanIssuedEvent.data.lender.toBase58(), bidder.publicKey.toBase58());
-  //   assert.equal(loanIssuedEvent.data.borrower.toBase58(), asker.publicKey.toBase58());
-  //   assert.equal(loanIssuedEvent.data.amount.toString(), "500000");
-  //   assert.equal(loanIssuedEvent.data.rate, minRate);
-  //   assert.equal(loanIssuedEvent.data.shardId.toString(), shardId.toString());
-  //   assert.equal(loanIssuedEvent.data.tokenMint.toBase58(), tokenMint.toBase58());
-  //   assert.equal(loanIssuedEvent.data.collateralMint.toBase58(), collateralMint.toBase58());
-  // });
+    assert.ok(loanIssuedEvent, "LoanIssued event should be emitted");
+    assert.equal(loanIssuedEvent.data.lender.toBase58(), bidder.publicKey.toBase58());
+    assert.equal(loanIssuedEvent.data.borrower.toBase58(), asker.publicKey.toBase58());
+    assert.equal(loanIssuedEvent.data.amount.toString(), "500000");
+    assert.equal(loanIssuedEvent.data.rate, minRate);
+    assert.equal(loanIssuedEvent.data.shardId.toString(), shardId.toString());
+    assert.equal(loanIssuedEvent.data.tokenMint.toBase58(), tokenMint.toBase58());
+    assert.equal(loanIssuedEvent.data.collateralMint.toBase58(), collateralMint.toBase58());
+  });
 
   // it("Submits an ask without matching bids", async () => {
   //   const [lendAuctionPda] = PublicKey.findProgramAddressSync(
